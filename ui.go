@@ -21,8 +21,6 @@ func bindings(a *App) map[string]any {
 		"setRam":         a.SetRam,
 		"setSolo":        a.SetSolo,
 		"checkUpdates":   a.CheckUpdates,
-		"publish":        a.Publish,
-		"openPublishDir": a.OpenPublishFolder,
 		"launchGame":     a.LaunchGame,
 		"openPackFolder": a.OpenPackFolder,
 		"openDataFolder": a.OpenDataFolder,

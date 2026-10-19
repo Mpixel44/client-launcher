@@ -420,26 +420,6 @@
   </div>
 </div>
 
-<!-- published -->
-<div class="veil" id="pubVeil">
-  <div class="modal wide" role="dialog" aria-modal="true">
-    <h3>Mise à jour prête</h3>
-    <p id="pubMsg"></p>
-    <ol id="pubStepsServer">
-      <li>Ouvre le dossier <code>en-ligne</code> ci-dessous.</li>
-      <li>Envoie <b>tout son contenu</b> sur ton serveur, à l'adresse <code id="pubUrl"></code> (remplace l'ancien contenu).</li>
-      <li>C'est tout : chaque launcher se met à jour à sa prochaine ouverture, ou en cliquant sur JOUER.</li>
-    </ol>
-    <ol id="pubStepsGithub" hidden>
-      <li>Clique sur <b>Nouvelle release GitHub</b> : la page s'ouvre dans ton navigateur.</li>
-      <li>Vérifie que le « Tag » est <code id="pubTag"></code> (sinon écris-le et choisis « Create new tag »).</li>
-      <li>Ouvre le dossier <code>en-ligne</code> et fais glisser <b>tous ses fichiers</b> dans la zone « Attach binaries ».</li>
-      <li>Attends la fin de l'envoi, puis <b>Publish release</b>. Les launchers se mettent à jour à leur prochaine ouverture.</li>
-    </ol>
-    <div class="row"><button class="btn" id="pubOpen">Ouvrir le dossier en-ligne</button><button class="btn primary" id="pubGh" hidden>Nouvelle release GitHub</button><button class="btn primary" id="pubClose">OK</button></div>
-  </div>
-</div>
-
 <!-- crash -->
 <div class="veil" id="crashVeil">
   <div class="modal wide" role="dialog" aria-modal="true">
@@ -633,15 +613,8 @@ function renderUpdateRows() {
   const ver = u.version ? `Version ${u.version}` + (u.published ? ` du ${fmtDate(u.published)}` : "") : "Pas encore de version téléchargée";
   if (u.admin) {
     box.innerHTML = `
-      <div class="row-i"><div class="k"><b>Mode administrateur</b><span>Ce PC publie les mises à jour (clé secrète présente). Il ne se met pas à jour lui-même.</span></div></div>
-      <div class="row-i"><div class="k"><b>Publier une mise à jour</b><span>Prépare le dossier à envoyer sur ${esc(u.url)}</span></div>
-        <button class="sbtn primary" id="pubBtn" ${state.updating || state.busyPack ? "disabled" : ""}>Préparer</button></div>
-      <div class="row-i"><div class="k"><b>Dossier à envoyer</b><span>publication\\en-ligne</span></div><button class="sbtn" id="pubDir">Ouvrir</button></div>`;
-    $("#pubBtn").onclick = async () => {
-      try { await publish(); state.updating = true; renderUpdateRows(); renderPlay(); }
-      catch (e) { setStatus(String(e), true); }
-    };
-    $("#pubDir").onclick = () => openPublishDir();
+      <div class="row-i"><div class="k"><b>PC source des mises à jour</b>
+        <span>Ce PC garde la clé secrète : il ne se met pas à jour tout seul, pour ne jamais effacer tes nouveaux mods. Les mises à jour sont publiées par Claude, à ta demande.</span></div></div>`;
     return;
   }
   box.innerHTML = `
@@ -715,8 +688,6 @@ $("#psSrc").onclick = () => openPackFolder(packId);
 $("#openData").onclick = () => openDataFolder();
 $("#ram").oninput = updateRamLabel;
 $("#ram").onchange = () => { state.ramMB = +$("#ram").value; setRam(state.ramMB); };
-$("#pubOpen").onclick = () => openPublishDir();
-$("#pubClose").onclick = () => $("#pubVeil").classList.remove("on");
 async function refreshState(reload) {
   state = await getState();
   if (reload) {
@@ -787,26 +758,11 @@ window.__onEvent = (ev, d) => {
       refreshState(d.reload);
       break;
     }
-    case "published":
-      state.updating = false;
-      setStatus(`Version ${d.version} prête à envoyer (${d.files} fichiers).`); setProgress(-1);
-      $("#pubMsg").textContent = `Version ${d.version} : ${d.files} fichiers, ${d.sizeMB} Mo de nouveaux fichiers.`;
-      $("#pubUrl").textContent = d.url;
-      {
-        const gh = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/releases/.exec(d.url || "");
-        $("#pubStepsGithub").hidden = !gh; $("#pubStepsServer").hidden = !!gh;
-        $("#pubGh").hidden = !gh; $("#pubClose").classList.toggle("primary", !gh);
-        $("#pubTag").textContent = "v" + d.version;
-        $("#pubGh").onclick = () => { openURL(`https://github.com/${gh[1]}/${gh[2]}/releases/new?tag=v${d.version}&title=Version%20${d.version}`); };
-      }
-      $("#pubVeil").classList.add("on");
-      refreshState(false);
-      break;
   }
 };
 
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape") { closeLogin(); ["#crashVeil", "#pubVeil"].forEach(s => $(s).classList.remove("on")); }
+  if (e.key === "Escape") { closeLogin(); ["#crashVeil"].forEach(s => $(s).classList.remove("on")); }
   if (e.key === "F5" || (e.ctrlKey && "rRpPfF".includes(e.key))) e.preventDefault();
 });
 document.addEventListener("contextmenu", e => { if (!e.target.closest("input, pre")) e.preventDefault(); });
