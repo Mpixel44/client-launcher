@@ -1,10 +1,10 @@
 {
-  "version": 2,
-  "published": "2026-10-20T01:35:00+02:00",
+  "version": 3,
+  "published": "2026-10-20T01:38:43+02:00",
   "launcher": {
     "path": "Launcher.exe",
-    "sha256": "dc3c29351bd44040abba8064e409c91518e2f91258ca9c9ec1eb9f01601ea6fc",
-    "size": 7528448
+    "sha256": "d1783b513df09838c38dc56adbbdf73ef02252ac9fbb7bfc18b7e32096a41cd0",
+    "size": 7532032
   },
   "config": {
     "path": "launcher.json",
