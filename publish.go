@@ -109,6 +109,9 @@ func publish(status func(string), progress Progress) (*PublishResult, error) {
 	// launcher + config
 	if exe, err := os.Executable(); err == nil {
 		exe, _ = filepath.EvalSymlinks(exe)
+		if e := os.Getenv("LAUNCHER_EXE"); e != "" { // publishing from another machine
+			exe = e
+		}
 		if strings.EqualFold(filepath.Ext(exe), ".exe") {
 			f, err := add(exe)
 			if err != nil {

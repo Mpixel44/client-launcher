@@ -2,11 +2,15 @@ package main
 
 import (
 	_ "embed"
+	"encoding/base64"
 	"strings"
 )
 
 //go:embed ui.html
 var uiHTML string
+
+//go:embed res/logo.png
+var logoPNG []byte
 
 // bindings lists the functions the page can call (window.<name>(...) → Promise).
 func bindings(a *App) map[string]any {
@@ -33,5 +37,6 @@ func bindings(a *App) map[string]any {
 }
 
 func pageHTML() string {
-	return strings.ReplaceAll(uiHTML, "{{TITLE}}", cfg.Name)
+	logo := "data:image/png;base64," + base64.StdEncoding.EncodeToString(logoPNG)
+	return strings.NewReplacer("{{TITLE}}", cfg.Name, "{{LOGO}}", logo).Replace(uiHTML)
 }

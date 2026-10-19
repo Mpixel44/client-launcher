@@ -6,19 +6,24 @@
 <title>{{TITLE}}</title>
 <style>
   :root {
-    --bg: #0e1310;
-    --rail: #0a0e0b;
-    --panel: #141b16;
-    --panel-2: #1a231d;
-    --hover: #1f2a22;
-    --line: #253229;
-    --line-2: #344538;
-    --text: #e9f0ea;
-    --muted: #8da093;
-    --faint: #5d6e62;
-    --grass: #62c04a;
-    --grass-hi: #77d65d;
-    --grass-ink: #0b1d07;
+    /* palette taken from the logo: night sky, violet → pink sunset, blue horizon, neon cube */
+    --bg: #070a1c;
+    --rail: #04061a;
+    --panel: #0d1130;
+    --panel-2: #141a42;
+    --hover: #1a2152;
+    --line: #222a5e;
+    --line-2: #36408a;
+    --text: #eef0ff;
+    --muted: #9ba3d6;
+    --faint: #626ba3;
+    --grass: #74fd08;
+    --grass-hi: #a2ff50;
+    --grass-ink: #0a1a00;
+    --violet: #5633bb;
+    --pink: #fb719f;
+    --blue: #016fe4;
+    --glow: 0 0 0 1px rgba(116,253,8,.55), 0 0 22px rgba(116,253,8,.35);
     --danger: #ef6b5f;
     --warn: #e8b84a;
     --radius: 10px;
@@ -58,7 +63,7 @@
   .game .lbl { max-width: 60px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .game:hover:not(:disabled) .ic { border-color: var(--line-2); background: var(--hover); }
   .game.active { color: var(--text); }
-  .game.active .ic { border-color: var(--grass); background: var(--panel-2); }
+  .game.active .ic { border-color: var(--grass); background: var(--panel-2); box-shadow: var(--glow); }
   .game.active::before {
     content: ""; position: absolute; left: -8px; top: 16px; width: 4px; height: 26px;
     border-radius: 0 3px 3px 0; background: var(--grass);
@@ -103,34 +108,58 @@
     border: 1px solid transparent;
   }
   .pack:hover { background: var(--hover); }
-  .pack.active { background: var(--panel-2); border-color: var(--line-2); }
+  .pack.active {
+    background: linear-gradient(90deg, rgba(86,51,187,.35), rgba(251,113,159,.12)); border-color: rgba(251,113,159,.45);
+  }
   .pack .pi { width: 40px; height: 40px; border-radius: 8px; flex: none; overflow: hidden; image-rendering: pixelated; }
   .pack .pi svg, .pack .pi img { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
   .pack .pt { min-width: 0; flex: 1; }
   .pack b { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .pack span { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .pack .run { width: 8px; height: 8px; border-radius: 50%; background: var(--grass); box-shadow: 0 0 0 3px rgba(98,192,74,.2); flex: none; }
+  .pack .run { width: 8px; height: 8px; border-radius: 50%; background: var(--grass); box-shadow: 0 0 0 3px rgba(116,253,8,.2); flex: none; }
 
   /* ---------- main ---------- */
   main { display: grid; grid-template-rows: auto auto 1fr auto; grid-template-columns: minmax(0, 1fr); min-height: 0; min-width: 0; }
   .hero {
-    padding: 26px 32px 18px;
+    position: relative; overflow: hidden; padding: 26px 190px 62px 32px; min-height: 172px;
     background:
-      linear-gradient(180deg, rgba(14,19,16,0) 0%, var(--bg) 100%),
-      repeating-linear-gradient(90deg, rgba(98,192,74,.04) 0 16px, transparent 16px 32px),
-      repeating-linear-gradient(0deg, rgba(98,192,74,.03) 0 16px, transparent 16px 32px),
-      radial-gradient(1200px 300px at 80% -40%, rgba(98,192,74,.16), transparent 70%);
+      radial-gradient(520px 200px at 82% 18%, rgba(251,113,159,.38), transparent 70%),
+      radial-gradient(900px 260px at 70% -40%, rgba(86,51,187,.75), transparent 70%),
+      linear-gradient(180deg, #120d3a 0%, var(--bg) 100%);
+    border-bottom: 1px solid var(--line);
   }
-  .hero h2 { margin: 0 0 4px; font-size: 28px; font-weight: 700; letter-spacing: -.3px; }
+  /* glowing horizon + synthwave floor grid */
+  .hero::before {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 46px;
+    background:
+      repeating-linear-gradient(90deg, rgba(1,111,228,.35) 0 1px, transparent 1px 44px),
+      repeating-linear-gradient(0deg, rgba(1,111,228,.28) 0 1px, transparent 1px 12px);
+    transform: perspective(160px) rotateX(55deg); transform-origin: bottom;
+    mask-image: linear-gradient(0deg, #000 10%, transparent 100%);
+    -webkit-mask-image: linear-gradient(0deg, #000 10%, transparent 100%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 46px; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(1,111,228,.9) 30%, rgba(116,253,8,.6) 78%, transparent);
+    box-shadow: 0 0 14px rgba(1,111,228,.8);
+  }
+  .hero > * { position: relative; z-index: 1; }
+  .hero-logo {
+    position: absolute; right: 30px; top: 18px; width: 134px; height: 134px;
+    filter: drop-shadow(0 0 22px rgba(116,253,8,.35)); z-index: 1; pointer-events: none;
+  }
+  .brand { width: 48px; height: 48px; margin-bottom: 6px; filter: drop-shadow(0 0 10px rgba(116,253,8,.35)); }
+  .hero h2 { margin: 0 0 4px; font-size: 30px; font-weight: 800; letter-spacing: -.3px; text-shadow: 0 2px 18px rgba(86,51,187,.8); }
   .hero p { margin: 0 0 12px; color: var(--muted); max-width: 640px; }
   .chips { display: flex; gap: 8px; flex-wrap: wrap; }
-  .chip { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.04); border: 1px solid var(--line); color: var(--muted); }
+  .chip { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: rgba(7,10,28,.55); border: 1px solid var(--line-2); color: var(--muted); backdrop-filter: blur(4px); }
   .chip b { color: var(--text); font-weight: 600; }
 
   .tabs { display: flex; gap: 4px; padding: 0 32px; border-bottom: 1px solid var(--line); }
   .tab { padding: 10px 14px; color: var(--muted); font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px; }
   .tab:hover { color: var(--text); }
-  .tab.active { color: var(--text); border-bottom-color: var(--grass); }
+  .tab.active { color: var(--text); border-bottom-color: var(--grass); text-shadow: 0 0 12px rgba(116,253,8,.45); }
   .tab .n { color: var(--faint); font-weight: 400; margin-left: 4px; }
 
   .content { min-height: 0; display: flex; flex-direction: column; padding: 16px 32px 0; }
@@ -210,14 +239,16 @@
   .play {
     min-width: 200px; height: 54px; padding: 0 28px; border-radius: 6px; background: var(--grass); color: var(--grass-ink);
     font-size: 18px; font-weight: 800; letter-spacing: 2px;
-    box-shadow: inset 0 -5px 0 rgba(0,0,0,.25), inset 0 2px 0 rgba(255,255,255,.25); transition: transform .06s, background .15s;
+    box-shadow: inset 0 -5px 0 rgba(0,0,0,.22), inset 0 2px 0 rgba(255,255,255,.35), 0 0 26px rgba(116,253,8,.35);
+    transition: transform .06s, background .15s, box-shadow .15s;
   }
+  .play:hover:not(:disabled) { box-shadow: inset 0 -5px 0 rgba(0,0,0,.22), inset 0 2px 0 rgba(255,255,255,.35), 0 0 36px rgba(116,253,8,.55); }
   .play:hover:not(:disabled) { background: var(--grass-hi); }
   .play:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); }
   .play:disabled { background: #2b3a2f; color: var(--muted); box-shadow: none; font-size: 14px; letter-spacing: 1px; }
 
   /* modals */
-  .veil { position: fixed; inset: 0; background: rgba(5,8,6,.72); backdrop-filter: blur(3px); display: none; place-items: center; z-index: 30; }
+  .veil { position: fixed; inset: 0; background: rgba(4,6,22,.72); backdrop-filter: blur(3px); display: none; place-items: center; z-index: 30; }
   .veil.on { display: grid; }
   .modal { width: min(460px, calc(100vw - 32px)); background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 26px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
   .modal.wide { width: min(640px, calc(100vw - 32px)); }
@@ -247,6 +278,8 @@
 <div class="app" id="app">
   <!-- game bar -->
   <nav class="rail" aria-label="Jeux">
+    <img class="brand" src="{{LOGO}}" alt="{{TITLE}}">
+    <div class="sep" style="margin-top:0"></div>
     <div id="games" style="display:grid; gap:6px"></div>
     <div class="spacer"></div>
     <div class="sep"></div>
@@ -268,6 +301,7 @@
   <!-- pack view -->
   <main id="viewPack">
     <header class="hero">
+      <img class="hero-logo" id="heroLogo" src="{{LOGO}}" alt="">
       <h2 id="packTitle"></h2>
       <p id="packDesc" hidden></p>
       <div class="chips" id="chips"></div>
@@ -364,6 +398,7 @@
 <div class="veil" id="loginVeil">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
     <div id="loginIntro">
+      <img src="{{LOGO}}" alt="" style="width:64px;height:64px;display:block;margin:-6px 0 10px;filter:drop-shadow(0 0 12px rgba(116,253,8,.35))">
       <h3 id="loginTitle">Connexion Microsoft</h3>
       <p>Connecte-toi avec le compte Microsoft qui possède Minecraft Java Edition.</p>
       <div class="row">
@@ -449,7 +484,8 @@ function gameIcon(g) {
   if (g.id === "cs2") return crosshair;
   return gamepad;
 }
-function packIconHTML(p, i) { return p.icon ? `<img alt="" src="${p.icon}">` : grassBlock(7 + i * 13); }
+const LOGO = document.querySelector(".brand").src;
+function packIconHTML(p, i) { return `<img alt="" src="${p.icon || LOGO}">`; }
 
 // ---- status bar ----
 function setStatus(text, isErr) { const el = $("#status"); el.textContent = text; el.classList.toggle("err", !!isErr); }
