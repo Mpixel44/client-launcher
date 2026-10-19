@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "published": "2026-10-20T01:29:29+02:00",
+  "version": 2,
+  "published": "2026-10-20T01:35:00+02:00",
   "launcher": {
     "path": "Launcher.exe",
     "sha256": "dc3c29351bd44040abba8064e409c91518e2f91258ca9c9ec1eb9f01601ea6fc",
@@ -236,11 +236,6 @@
       "path": "mods/emiffect-fabric-2.1.5+mc1.21.1.jar",
       "sha256": "85285b28934f3022f5902e2ef6fa808be370038a72df4689e511b3ded4745422",
       "size": 40464
-    },
-    {
-      "path": "mods/enchantmentsreforged-fabric-1.21.1-1.0.0-fabric-1.21.1.jar",
-      "sha256": "30f39efe02f9cdd007b89ea34839281e50f4639b6ca7748edb7fa7b883d4b304",
-      "size": 141647
     },
     {
       "path": "mods/enhancedblockentities-0.10.2+1.21.jar",
