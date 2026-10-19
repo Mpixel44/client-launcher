@@ -1,0 +1,5 @@
+# Ne jamais publier la clé secrète
+publication/
+*.exe
+*.exe.old
+*.exe.new

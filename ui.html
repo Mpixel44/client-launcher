@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<style>
+  :root {
+    --bg: #0e1310;
+    --rail: #0a0e0b;
+    --panel: #141b16;
+    --panel-2: #1a231d;
+    --hover: #1f2a22;
+    --line: #253229;
+    --line-2: #344538;
+    --text: #e9f0ea;
+    --muted: #8da093;
+    --faint: #5d6e62;
+    --grass: #62c04a;
+    --grass-hi: #77d65d;
+    --grass-ink: #0b1d07;
+    --danger: #ef6b5f;
+    --warn: #e8b84a;
+    --radius: 10px;
+    --mono: "Cascadia Mono", Consolas, ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 14px/1.45 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    overflow: hidden; user-select: none;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+  button:disabled { cursor: default; }
+  :focus-visible { outline: 2px solid var(--grass); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+
+  .app { display: grid; grid-template-columns: 76px 240px minmax(0, 1fr); height: 100vh; }
+  .app.wide { grid-template-columns: 76px minmax(0, 1fr); }
+  .app.wide .packs { display: none; }
+
+  /* ---------- game rail ---------- */
+  .rail {
+    background: var(--rail); border-right: 1px solid var(--line);
+    display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 0 12px;
+  }
+  .game {
+    position: relative; width: 60px; padding: 6px 0 5px; border-radius: 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    color: var(--muted); font-size: 10.5px; font-weight: 600; letter-spacing: .2px;
+  }
+  .game .ic {
+    width: 44px; height: 44px; border-radius: 11px; display: grid; place-items: center;
+    background: var(--panel); border: 1px solid var(--line); transition: border-color .15s, background .15s;
+  }
+  .game .ic svg { width: 26px; height: 26px; }
+  .game .lbl { max-width: 60px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .game:hover:not(:disabled) .ic { border-color: var(--line-2); background: var(--hover); }
+  .game.active { color: var(--text); }
+  .game.active .ic { border-color: var(--grass); background: var(--panel-2); }
+  .game.active::before {
+    content: ""; position: absolute; left: -8px; top: 16px; width: 4px; height: 26px;
+    border-radius: 0 3px 3px 0; background: var(--grass);
+  }
+  .game.soon { cursor: not-allowed; }
+  .game.soon .ic, .game.soon .lbl { opacity: .45; filter: grayscale(1); }
+  .game .badge {
+    position: absolute; top: 0; right: 0; font-size: 8px; font-weight: 800; letter-spacing: .4px;
+    background: #2a352d; color: var(--muted); border: 1px solid var(--line-2); border-radius: 5px; padding: 1px 4px;
+  }
+  .rail .sep { width: 32px; height: 1px; background: var(--line); margin: 4px 0; }
+  .rail .spacer { flex: 1; }
+  .rail-btn {
+    width: 44px; height: 44px; border-radius: 11px; display: grid; place-items: center; color: var(--muted);
+    border: 1px solid transparent; position: relative; overflow: hidden;
+  }
+  .rail-btn:hover { background: var(--panel); color: var(--text); }
+  .rail-btn.active { border-color: var(--grass); color: var(--text); background: var(--panel-2); }
+  .rail-btn svg { width: 22px; height: 22px; }
+  .rail-btn img { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+  .rail-btn .ini { font-weight: 700; }
+
+  /* tooltips */
+  [data-tip] { position: relative; }
+  [data-tip]:hover::after {
+    content: attr(data-tip); position: absolute; left: calc(100% + 12px); top: 50%; transform: translateY(-50%);
+    background: #050806; border: 1px solid var(--line-2); color: var(--text); font-size: 12px; font-weight: 500;
+    padding: 5px 9px; border-radius: 6px; white-space: nowrap; z-index: 20; pointer-events: none; filter: none; opacity: 1;
+  }
+
+  /* ---------- packs column ---------- */
+  .packs {
+    background: var(--panel); border-right: 1px solid var(--line);
+    display: flex; flex-direction: column; min-height: 0;
+  }
+  .packs-head { padding: 22px 18px 12px; }
+  .packs-head h1 { font-size: 19px; margin: 0; font-weight: 650; }
+  .packs-head small { color: var(--muted); font-size: 12px; }
+  .pack-list { flex: 1; overflow: auto; padding: 4px 10px; display: grid; gap: 6px; align-content: start; }
+  .pack {
+    display: flex; align-items: center; gap: 11px; padding: 10px; border-radius: 10px; text-align: left; width: 100%;
+    border: 1px solid transparent;
+  }
+  .pack:hover { background: var(--hover); }
+  .pack.active { background: var(--panel-2); border-color: var(--line-2); }
+  .pack .pi { width: 40px; height: 40px; border-radius: 8px; flex: none; overflow: hidden; image-rendering: pixelated; }
+  .pack .pi svg, .pack .pi img { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+  .pack .pt { min-width: 0; flex: 1; }
+  .pack b { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pack span { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pack .run { width: 8px; height: 8px; border-radius: 50%; background: var(--grass); box-shadow: 0 0 0 3px rgba(98,192,74,.2); flex: none; }
+
+  /* ---------- main ---------- */
+  main { display: grid; grid-template-rows: auto auto 1fr auto; grid-template-columns: minmax(0, 1fr); min-height: 0; min-width: 0; }
+  .hero {
+    padding: 26px 32px 18px;
+    background:
+      linear-gradient(180deg, rgba(14,19,16,0) 0%, var(--bg) 100%),
+      repeating-linear-gradient(90deg, rgba(98,192,74,.04) 0 16px, transparent 16px 32px),
+      repeating-linear-gradient(0deg, rgba(98,192,74,.03) 0 16px, transparent 16px 32px),
+      radial-gradient(1200px 300px at 80% -40%, rgba(98,192,74,.16), transparent 70%);
+  }
+  .hero h2 { margin: 0 0 4px; font-size: 28px; font-weight: 700; letter-spacing: -.3px; }
+  .hero p { margin: 0 0 12px; color: var(--muted); max-width: 640px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.04); border: 1px solid var(--line); color: var(--muted); }
+  .chip b { color: var(--text); font-weight: 600; }
+
+  .tabs { display: flex; gap: 4px; padding: 0 32px; border-bottom: 1px solid var(--line); }
+  .tab { padding: 10px 14px; color: var(--muted); font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--text); border-bottom-color: var(--grass); }
+  .tab .n { color: var(--faint); font-weight: 400; margin-left: 4px; }
+
+  .content { min-height: 0; display: flex; flex-direction: column; padding: 16px 32px 0; }
+  .mods-head { display: flex; align-items: center; margin-bottom: 12px; }
+  .search {
+    margin-left: auto; width: 260px; padding: 7px 11px; border-radius: 8px;
+    border: 1px solid var(--line); background: var(--panel); color: var(--text); font: inherit; font-size: 13px; user-select: text;
+  }
+  .search::placeholder { color: var(--faint); }
+  .count { color: var(--muted); font-size: 13px; }
+  .scroll { flex: 1; overflow: auto; min-height: 0; padding-bottom: 16px; }
+  .scroll::-webkit-scrollbar { width: 10px; }
+  .scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 10px; border: 3px solid var(--bg); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; align-content: start; }
+  .mod { display: flex; gap: 10px; align-items: center; padding: 9px 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+  .mod img, .mod .ph { width: 32px; height: 32px; border-radius: 5px; flex: none; image-rendering: pixelated; }
+  .mod .ph { background: var(--panel-2); display: grid; place-items: center; color: var(--faint); font-weight: 700; font-size: 13px; }
+  .mod div { min-width: 0; }
+  .mod b { display: block; font-weight: 550; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mod span { display: block; font-size: 11px; color: var(--faint); font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .empty { color: var(--muted); padding: 20px 0; }
+
+  /* settings-like rows */
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 14px; }
+  .card h3 { margin: 0; padding: 14px 18px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1.1px; color: var(--faint); font-weight: 700; }
+  .row-i { display: flex; align-items: center; gap: 14px; padding: 13px 18px; border-bottom: 1px solid var(--line); }
+  .row-i:last-child { border-bottom: 0; }
+  .row-i .k { flex: 1; min-width: 0; }
+  .row-i .k b { display: block; font-weight: 550; }
+  .row-i .k span { display: block; font-size: 12px; color: var(--muted); }
+  .row-i .v { color: var(--muted); font-family: var(--mono); font-size: 13px; }
+  .sbtn { padding: 7px 13px; border-radius: 8px; background: var(--panel-2); border: 1px solid var(--line); font-weight: 600; font-size: 13px; white-space: nowrap; }
+  .sbtn:hover { background: var(--hover); border-color: var(--line-2); }
+  .sbtn.danger { color: var(--danger); }
+  .sbtn.primary { background: var(--grass); color: var(--grass-ink); border-color: transparent; }
+  .avatar {
+    width: 44px; height: 44px; border-radius: 8px; flex: none; background: var(--line); display: grid; place-items: center;
+    font-weight: 700; color: var(--muted); overflow: hidden; position: relative;
+  }
+  .avatar img { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+  .ram-wrap { padding: 4px 18px 16px; }
+  .ram-row { display: flex; justify-content: space-between; align-items: baseline; }
+  .ram-val { font-family: var(--mono); font-size: 16px; }
+  input[type=range] { width: 100%; accent-color: var(--grass); margin: 8px 0 2px; }
+  .hint { font-size: 12px; color: var(--muted); min-height: 17px; }
+  .hint.warn { color: var(--warn); }
+  .page { padding: 26px 32px; overflow: auto; }
+  .page h2 { margin: 0 0 18px; font-size: 26px; }
+  .page .wrap { max-width: 720px; }
+
+  /* game view (non-Minecraft games) */
+  .game-view { display: grid; place-items: center; text-align: center; padding: 40px; }
+  .game-view .big { width: 96px; height: 96px; border-radius: 22px; background: var(--panel); border: 1px solid var(--line); display: grid; place-items: center; margin: 0 auto 18px; }
+  .game-view .big svg { width: 56px; height: 56px; }
+  .game-view h2 { margin: 0 0 6px; font-size: 28px; }
+  .game-view p { color: var(--muted); margin: 0 0 22px; }
+
+  /* play bar */
+  .bar { display: flex; align-items: center; gap: 20px; padding: 16px 32px; border-top: 1px solid var(--line); background: var(--panel); }
+  .mode { display: flex; padding: 4px; gap: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; flex: none; }
+  .mode button {
+    display: flex; align-items: center; gap: 7px; padding: 0 14px; height: 44px; border-radius: 7px;
+    color: var(--muted); font-weight: 650; font-size: 13px; transition: background .15s, color .15s;
+  }
+  .mode button svg { width: 16px; height: 16px; }
+  .mode button:hover:not(.on):not(:disabled) { color: var(--text); background: var(--panel-2); }
+  .mode button.on { background: var(--panel-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--line-2); }
+  .mode button.on svg { color: var(--grass); }
+  .mode button:disabled { cursor: default; }
+  .progress { flex: 1; min-width: 0; }
+  .status { font-size: 13px; color: var(--muted); margin-bottom: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .status.err { color: var(--danger); }
+  .track { height: 8px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
+  .fill { height: 100%; width: 0; background: var(--grass); background-image: repeating-linear-gradient(90deg, rgba(0,0,0,.12) 0 6px, transparent 6px 12px); transition: width .2s; }
+  .fill.indet { width: 30%; animation: slide 1.1s infinite ease-in-out; }
+  @keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(340%); } }
+  .play {
+    min-width: 200px; height: 54px; padding: 0 28px; border-radius: 6px; background: var(--grass); color: var(--grass-ink);
+    font-size: 18px; font-weight: 800; letter-spacing: 2px;
+    box-shadow: inset 0 -5px 0 rgba(0,0,0,.25), inset 0 2px 0 rgba(255,255,255,.25); transition: transform .06s, background .15s;
+  }
+  .play:hover:not(:disabled) { background: var(--grass-hi); }
+  .play:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); }
+  .play:disabled { background: #2b3a2f; color: var(--muted); box-shadow: none; font-size: 14px; letter-spacing: 1px; }
+
+  /* modals */
+  .veil { position: fixed; inset: 0; background: rgba(5,8,6,.72); backdrop-filter: blur(3px); display: none; place-items: center; z-index: 30; }
+  .veil.on { display: grid; }
+  .modal { width: min(460px, calc(100vw - 32px)); background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 26px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+  .modal.wide { width: min(640px, calc(100vw - 32px)); }
+  .modal h3 { margin: 0 0 6px; font-size: 19px; }
+  .modal p { margin: 0 0 16px; color: var(--muted); }
+  .modal ol { margin: 0 0 18px; padding-left: 20px; color: var(--muted); }
+  .modal ol li { margin-bottom: 8px; }
+  .modal code { font-family: var(--mono); font-size: 12px; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
+  pre.snippet, pre.log {
+    font-family: var(--mono); font-size: 11.5px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 12px; margin: 0 0 16px; white-space: pre-wrap; color: var(--muted); user-select: text;
+  }
+  pre.log { max-height: 220px; overflow: auto; word-break: break-all; font-size: 11px; }
+  .code { font-family: var(--mono); font-size: 34px; letter-spacing: 6px; text-align: center; font-weight: 700; padding: 16px; border-radius: 10px; background: var(--bg); border: 1px dashed #3a4c3e; margin-bottom: 14px; user-select: all; }
+  .row { display: flex; gap: 10px; }
+  .btn { flex: 1; padding: 11px 14px; border-radius: 8px; font-weight: 600; background: var(--panel-2); border: 1px solid var(--line); }
+  .btn:hover { background: #222d25; }
+  .btn.primary { background: var(--grass); color: var(--grass-ink); border-color: transparent; }
+  .btn.primary:hover { background: var(--grass-hi); }
+  .waiting { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; margin-top: 14px; }
+  .spin { width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--grass); border-radius: 50%; animation: rot .8s linear infinite; }
+  @keyframes rot { to { transform: rotate(360deg); } }
+  .err-box { color: var(--danger); font-size: 13px; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <!-- game bar -->
+  <nav class="rail" aria-label="Jeux">
+    <div id="games" style="display:grid; gap:6px"></div>
+    <div class="spacer"></div>
+    <div class="sep"></div>
+    <button class="rail-btn" id="settingsBtn" data-tip="Paramètres" aria-label="Paramètres">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+    <button class="rail-btn" id="accountBtn" data-tip="Compte" aria-label="Compte"></button>
+  </nav>
+
+  <!-- packs of the selected game -->
+  <aside class="packs" id="packsCol">
+    <div class="packs-head">
+      <h1>Minecraft</h1>
+      <small id="packsSub">Modpacks</small>
+    </div>
+    <div class="pack-list" id="packList"></div>
+  </aside>
+
+  <!-- pack view -->
+  <main id="viewPack">
+    <header class="hero">
+      <h2 id="packTitle"></h2>
+      <p id="packDesc" hidden></p>
+      <div class="chips" id="chips"></div>
+    </header>
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="mods" role="tab">Mods<span class="n" id="modN"></span></button>
+      <button class="tab" data-tab="pset" role="tab">Réglages du pack</button>
+    </div>
+    <section class="content">
+      <div id="tabMods" style="display:flex; flex-direction:column; min-height:0; flex:1">
+        <div class="mods-head">
+          <span class="count" id="modCount"></span>
+          <input class="search" id="search" type="search" placeholder="Rechercher un mod…" autocomplete="off">
+        </div>
+        <div class="scroll"><div class="grid" id="grid"></div></div>
+      </div>
+      <div id="tabPset" class="scroll" hidden>
+        <div class="card">
+          <h3>Version</h3>
+          <div class="row-i"><div class="k"><b>Minecraft</b></div><div class="v" id="psMc"></div></div>
+          <div class="row-i"><div class="k"><b>Chargeur de mods</b></div><div class="v" id="psLoader"></div></div>
+          <div class="row-i"><div class="k"><b>Serveur</b><span>Rejoint automatiquement en cliquant sur JOUER</span></div><div class="v" id="psServer"></div></div>
+        </div>
+        <div class="card">
+          <h3>Dossiers</h3>
+          <div class="row-i"><div class="k"><b>Dossier du jeu</b><span>Mondes, captures d'écran, réglages, crash-reports</span></div><button class="sbtn" id="psGame">Ouvrir</button></div>
+          <div class="row-i"><div class="k"><b>Fichiers du pack</b><span>Le dossier mods d'origine, à côté du launcher</span></div><button class="sbtn" id="psSrc">Ouvrir</button></div>
+        </div>
+        <p class="hint">La mémoire (RAM) se règle dans les Paramètres, elle s'applique à tous les packs.</p>
+      </div>
+    </section>
+    <footer class="bar">
+      <div class="progress">
+        <div class="status" id="status">Prêt.</div>
+        <div class="track"><div class="fill" id="fill"></div></div>
+      </div>
+      <div class="mode" id="mode" role="radiogroup" aria-label="Mode de jeu">
+        <button role="radio" data-mode="server">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>Serveur
+        </button>
+        <button role="radio" data-mode="solo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Solo
+        </button>
+      </div>
+      <button class="play" id="play">JOUER</button>
+    </footer>
+  </main>
+
+  <!-- other game view -->
+  <main id="viewGame" hidden>
+    <div class="game-view" style="grid-row: 1 / -1">
+      <div>
+        <div class="big" id="gvIcon"></div>
+        <h2 id="gvName"></h2>
+        <p id="gvText"></p>
+        <button class="play" id="gvPlay">LANCER</button>
+        <div class="err-box" id="gvErr"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- settings -->
+  <main id="viewSettings" hidden>
+    <div class="page" style="grid-row: 1 / -1">
+      <div class="wrap">
+        <h2>Paramètres</h2>
+        <div class="card">
+          <h3>Compte</h3>
+          <div class="row-i" id="accRow"></div>
+        </div>
+        <div class="card">
+          <h3>Mémoire allouée</h3>
+          <div class="ram-wrap">
+            <div class="ram-row"><span>RAM pour Minecraft</span><span class="ram-val" id="ramVal">8 Go</span></div>
+            <input type="range" id="ram" min="2048" max="131072" step="1024" value="8192">
+            <div class="hint" id="ramHint"></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Mises à jour</h3>
+          <div id="updRows"></div>
+        </div>
+        <div class="card">
+          <h3>Launcher</h3>
+          <div class="row-i"><div class="k"><b>Données du launcher</b><span>Minecraft, Java, et un dossier par pack</span></div><button class="sbtn" id="openData">Ouvrir</button></div>
+          <div class="row-i"><div class="k"><b id="aboutName"></b><span>Version du launcher</span></div><div class="v" id="aboutVer"></div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- login -->
+<div class="veil" id="loginVeil">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+    <div id="loginIntro">
+      <h3 id="loginTitle">Connexion Microsoft</h3>
+      <p>Connecte-toi avec le compte Microsoft qui possède Minecraft Java Edition.</p>
+      <div class="row">
+        <button class="btn" id="loginClose">Plus tard</button>
+        <button class="btn primary" id="loginGo">Se connecter</button>
+      </div>
+    </div>
+    <div id="loginCode" hidden>
+      <h3>Entre ce code sur la page Microsoft</h3>
+      <p>Il est déjà copié : colle-le sur <span id="loginUrl" style="color:var(--text)"></span> puis valide.</p>
+      <div class="code" id="codeText">—</div>
+      <div class="row">
+        <button class="btn" id="loginCancel">Annuler</button>
+        <button class="btn primary" id="loginOpen">Ouvrir la page</button>
+      </div>
+      <div class="waiting"><div class="spin"></div>En attente de la validation…</div>
+    </div>
+    <div class="err-box" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- published -->
+<div class="veil" id="pubVeil">
+  <div class="modal wide" role="dialog" aria-modal="true">
+    <h3>Mise à jour prête</h3>
+    <p id="pubMsg"></p>
+    <ol id="pubStepsServer">
+      <li>Ouvre le dossier <code>en-ligne</code> ci-dessous.</li>
+      <li>Envoie <b>tout son contenu</b> sur ton serveur, à l'adresse <code id="pubUrl"></code> (remplace l'ancien contenu).</li>
+      <li>C'est tout : chaque launcher se met à jour à sa prochaine ouverture, ou en cliquant sur JOUER.</li>
+    </ol>
+    <ol id="pubStepsGithub" hidden>
+      <li>Clique sur <b>Nouvelle release GitHub</b> : la page s'ouvre dans ton navigateur.</li>
+      <li>Vérifie que le « Tag » est <code id="pubTag"></code> (sinon écris-le et choisis « Create new tag »).</li>
+      <li>Ouvre le dossier <code>en-ligne</code> et fais glisser <b>tous ses fichiers</b> dans la zone « Attach binaries ».</li>
+      <li>Attends la fin de l'envoi, puis <b>Publish release</b>. Les launchers se mettent à jour à leur prochaine ouverture.</li>
+    </ol>
+    <div class="row"><button class="btn" id="pubOpen">Ouvrir le dossier en-ligne</button><button class="btn primary" id="pubGh" hidden>Nouvelle release GitHub</button><button class="btn primary" id="pubClose">OK</button></div>
+  </div>
+</div>
+
+<!-- crash -->
+<div class="veil" id="crashVeil">
+  <div class="modal wide" role="dialog" aria-modal="true">
+    <h3>Oups, le jeu s'est arrêté</h3>
+    <p id="crashMsg"></p>
+    <pre class="log" id="crashLog"></pre>
+    <div class="row">
+      <button class="btn" id="crashFolder">Ouvrir le dossier du jeu</button>
+      <button class="btn primary" id="crashClose">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const gb = mb => (mb / 1024).toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " Go";
+
+let state = null;          // from Go
+let view = "game";         // "game" | "settings"
+let gameId = "minecraft";
+let packId = null;
+let tab = "mods";
+const modsCache = {};
+let loginUrl = "", crashPack = null;
+
+// ---- icons ----
+function grassBlock(seed = 7) {
+  const greens = ["#62c04a", "#57ad41", "#6fd457", "#4f9c3a"], dirts = ["#7a5232", "#6b4529", "#8a5f3b", "#5e3c23"];
+  const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  let out = "";
+  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
+    const pal = (y < 2 || (y === 2 && rnd() < .5)) ? greens : dirts;
+    out += `<rect x="${x}" y="${y}" width="1" height="1" fill="${pal[Math.floor(rnd() * pal.length)]}"/>`;
+  }
+  return `<svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">${out}</svg>`;
+}
+const crosshair = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>`;
+const gamepad = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 11v3M5.5 12.5h3"/><circle cx="16" cy="11.5" r=".9" fill="currentColor"/><circle cx="18" cy="13.5" r=".9" fill="currentColor"/></svg>`;
+function gameIcon(g) {
+  if (g.type === "minecraft") return grassBlock();
+  if (g.id === "cs2") return crosshair;
+  return gamepad;
+}
+function packIconHTML(p, i) { return p.icon ? `<img alt="" src="${p.icon}">` : grassBlock(7 + i * 13); }
+
+// ---- status bar ----
+function setStatus(text, isErr) { const el = $("#status"); el.textContent = text; el.classList.toggle("err", !!isErr); }
+function setProgress(p) { const f = $("#fill"); f.classList.toggle("indet", p === null); f.style.width = p === null ? "" : Math.max(0, p) * 100 + "%"; }
+
+const curPack = () => state.packs.find(p => p.id === packId);
+const curGame = () => state.games.find(g => g.id === gameId);
+
+// ---- rendering ----
+function renderRail() {
+  $("#games").innerHTML = state.games.map(g => {
+    const active = view === "game" && g.id === gameId;
+    const tip = g.comingSoon ? `${g.name} — bientôt disponible` : g.name;
+    return `<button class="game ${active ? "active" : ""} ${g.comingSoon ? "soon" : ""}" data-game="${esc(g.id)}"
+              data-tip="${esc(tip)}" aria-label="${esc(tip)}" ${g.comingSoon ? 'aria-disabled="true"' : ""}>
+        <span class="ic">${gameIcon(g)}</span><span class="lbl">${esc(g.short || g.name)}</span>
+        ${g.comingSoon ? '<span class="badge">BIENTÔT</span>' : ""}
+      </button>`;
+  }).join("");
+  document.querySelectorAll("#games .game").forEach(b => b.onclick = () => {
+    const g = state.games.find(x => x.id === b.dataset.game);
+    if (!g || g.comingSoon) return;
+    gameId = g.id; view = "game"; renderAll();
+  });
+  $("#settingsBtn").classList.toggle("active", view === "settings");
+  const a = state.account, ab = $("#accountBtn");
+  ab.dataset.tip = a ? `Connecté : ${a.name}` : "Se connecter";
+  ab.innerHTML = a
+    ? `<span class="ini">${esc((a.name[0] || "?").toUpperCase())}</span><img alt="" src="https://mc-heads.net/avatar/${esc(a.uuid)}/88" onerror="this.remove()">`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>`;
+}
+
+function renderPacks() {
+  $("#packsSub").textContent = state.packs.length + (state.packs.length > 1 ? " modpacks" : " modpack");
+  $("#packList").innerHTML = state.packs.map((p, i) => `
+    <button class="pack ${p.id === packId ? "active" : ""}" data-pack="${esc(p.id)}">
+      <span class="pi">${packIconHTML(p, i)}</span>
+      <span class="pt"><b>${esc(p.name)}</b><span>${esc(p.minecraft)} · ${esc(p.loader)}${p.loader === "Fabric" ? " · " + p.modCount + " mods" : ""}</span></span>
+      ${state.busyPack === p.id ? '<span class="run" title="En cours"></span>' : ""}
+    </button>`).join("") || `<div class="empty" style="padding:10px">Aucun pack dans launcher.json.</div>`;
+  document.querySelectorAll("#packList .pack").forEach(b => b.onclick = () => selectPackUI(b.dataset.pack));
+}
+
+function renderPackView() {
+  const p = curPack();
+  if (!p) return;
+  $("#packTitle").textContent = p.name;
+  $("#packDesc").hidden = !p.description;
+  $("#packDesc").textContent = p.description || "";
+  $("#chips").innerHTML =
+    `<span class="chip">Minecraft <b>${esc(p.minecraft)}</b></span><span class="chip"><b>${esc(p.loader)}</b></span>` +
+    (p.loader === "Fabric" ? `<span class="chip"><b>${p.modCount}</b> mods</span>` : "") +
+    (p.server ? `<span class="chip">Serveur <b>${esc(p.server)}</b></span>` : "");
+  $("#modN").textContent = p.loader === "Fabric" ? p.modCount : "";
+  $("#psMc").textContent = p.minecraft;
+  $("#psLoader").textContent = p.loader;
+  $("#psServer").textContent = p.server || "aucun";
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
+  $("#tabMods").hidden = tab !== "mods";
+  $("#tabPset").hidden = tab !== "pset";
+  renderPlay();
+}
+
+function renderMods() {
+  const p = curPack(), grid = $("#grid");
+  if (!p) return;
+  const mods = modsCache[p.id];
+  if (!mods) { grid.innerHTML = `<div class="empty">Chargement des mods…</div>`; $("#modCount").textContent = ""; return; }
+  const q = $("#search").value.trim().toLowerCase();
+  const list = q ? mods.filter(m => (m.name + " " + m.file + " " + m.description).toLowerCase().includes(q)) : mods;
+  $("#modCount").textContent = q ? `${list.length} sur ${mods.length}` : `${mods.length} mods`;
+  if (!mods.length) { grid.innerHTML = `<div class="empty">Ce pack n'a aucun mod (dossier mods vide ou introuvable).</div>`; return; }
+  if (!list.length) { grid.innerHTML = `<div class="empty">Aucun mod ne correspond à « ${esc(q)} ».</div>`; return; }
+  grid.innerHTML = list.map(m => `
+    <div class="mod" title="${esc(m.description || m.file)}">
+      ${m.icon ? `<img alt="" src="${m.icon}">` : `<div class="ph">${esc((m.name[0] || "?").toUpperCase())}</div>`}
+      <div><b>${esc(m.name)}</b><span>${esc(m.version || m.file)}</span></div>
+    </div>`).join("");
+}
+
+function renderMode() {
+  const p = curPack(), m = $("#mode");
+  m.hidden = !p || !p.server;
+  if (m.hidden) return;
+  const busy = !!state.busyPack;
+  m.querySelectorAll("button").forEach(btn => {
+    const on = (btn.dataset.mode === "solo") === !!p.solo;
+    btn.classList.toggle("on", on);
+    btn.setAttribute("aria-checked", on);
+    btn.disabled = busy;
+  });
+  m.querySelector('[data-mode=server]').title = "Rejoindre " + p.server + " au lancement";
+  m.querySelector('[data-mode=solo]').title = "Lancer Minecraft sur l'écran titre (mondes solo)";
+}
+
+function renderPlay() {
+  renderMode();
+  const b = $("#play");
+  if (state.busyPack && state.busyPack !== packId) {
+    b.disabled = true; b.textContent = "AUTRE PACK EN COURS"; return;
+  }
+  if (state.busyPack === packId) { b.disabled = true; return; }
+  if (state.updating) { b.disabled = true; b.textContent = "MISE À JOUR…"; return; }
+  b.disabled = false;
+  b.textContent = state.account ? "JOUER" : "SE CONNECTER";
+}
+
+function renderGameView() {
+  const g = curGame();
+  $("#gvIcon").innerHTML = gameIcon(g);
+  $("#gvName").textContent = g.name;
+  $("#gvText").textContent = g.type === "steam" ? "Se lance via Steam." : "Lance le jeu installé sur ce PC.";
+  $("#gvErr").textContent = "";
+}
+
+function renderSettings() {
+  const a = state.account;
+  $("#accRow").innerHTML = a
+    ? `<div class="avatar">${esc((a.name[0] || "?").toUpperCase())}<img alt="" src="https://mc-heads.net/avatar/${esc(a.uuid)}/88" onerror="this.remove()"></div>
+       <div class="k"><b>${esc(a.name)}</b><span>Compte Microsoft connecté</span></div>
+       <button class="sbtn danger" id="logoutBtn">Se déconnecter</button>`
+    : `<div class="avatar">?</div><div class="k"><b>Non connecté</b><span>Nécessaire pour jouer à Minecraft</span></div>
+       <button class="sbtn primary" id="loginBtn">Se connecter</button>`;
+  if (a) $("#logoutBtn").onclick = async () => { await logout(); state.account = null; renderAll(); };
+  else $("#loginBtn").onclick = openLogin;
+  const r = $("#ram");
+  r.value = state.ramMB;
+  updateRamLabel();
+  renderUpdateRows();
+  $("#aboutName").textContent = state.name;
+  $("#aboutVer").textContent = "v" + state.version;
+}
+
+function fmtDate(s) {
+  if (!s) return "";
+  const d = new Date(s);
+  return isNaN(d) ? "" : d.toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
+function renderUpdateRows() {
+  const u = state.update || {}, box = $("#updRows");
+  if (!u.enabled) {
+    box.innerHTML = `<div class="row-i"><div class="k"><b>Désactivées</b><span>Aucune adresse de mise à jour dans launcher.json</span></div></div>`;
+    return;
+  }
+  const ver = u.version ? `Version ${u.version}` + (u.published ? ` du ${fmtDate(u.published)}` : "") : "Pas encore de version téléchargée";
+  if (u.admin) {
+    box.innerHTML = `
+      <div class="row-i"><div class="k"><b>Mode administrateur</b><span>Ce PC publie les mises à jour (clé secrète présente). Il ne se met pas à jour lui-même.</span></div></div>
+      <div class="row-i"><div class="k"><b>Publier une mise à jour</b><span>Prépare le dossier à envoyer sur ${esc(u.url)}</span></div>
+        <button class="sbtn primary" id="pubBtn" ${state.updating || state.busyPack ? "disabled" : ""}>Préparer</button></div>
+      <div class="row-i"><div class="k"><b>Dossier à envoyer</b><span>publication\\en-ligne</span></div><button class="sbtn" id="pubDir">Ouvrir</button></div>`;
+    $("#pubBtn").onclick = async () => {
+      try { await publish(); state.updating = true; renderUpdateRows(); renderPlay(); }
+      catch (e) { setStatus(String(e), true); }
+    };
+    $("#pubDir").onclick = () => openPublishDir();
+    return;
+  }
+  box.innerHTML = `
+    <div class="row-i"><div class="k"><b>${state.updating ? "Mise à jour en cours…" : esc(u.message || "Automatiques")}</b>
+      <span>${esc(ver)}${u.checked ? " · vérifié le " + fmtDate(u.checked) : ""}</span></div>
+      <button class="sbtn" id="updBtn" ${state.updating || state.busyPack ? "disabled" : ""}>Vérifier</button></div>`;
+  $("#updBtn").onclick = async () => {
+    try { await checkUpdates(); state.updating = true; renderUpdateRows(); renderPlay(); }
+    catch (e) { setStatus(String(e), true); }
+  };
+}
+
+function updateRamLabel() {
+  const v = +$("#ram").value, h = $("#ramHint");
+  $("#ramVal").textContent = gb(v);
+  if (v < 4096) { h.textContent = "Avec beaucoup de mods, 4 Go minimum conseillés."; h.className = "hint warn"; }
+  else if (v > state.maxRamMB) { h.textContent = `Plus que la RAM du PC (${gb(state.maxRamMB)}) : le jeu risque de planter.`; h.className = "hint warn"; }
+  else if (v > state.maxRamMB * 0.75) { h.textContent = "Attention : presque toute la RAM du PC."; h.className = "hint warn"; }
+  else { h.textContent = `Ton PC a ${gb(state.maxRamMB)} de RAM. 8 à 12 Go suffisent pour un gros modpack.`; h.className = "hint"; }
+}
+
+function renderAll() {
+  document.title = state.name;
+  const g = curGame();
+  const isMC = view === "game" && g && g.type === "minecraft";
+  $("#app").classList.toggle("wide", !isMC);
+  $("#viewPack").hidden = !isMC;
+  $("#viewGame").hidden = !(view === "game" && g && g.type !== "minecraft");
+  $("#viewSettings").hidden = view !== "settings";
+  renderRail();
+  if (isMC) { renderPacks(); renderPackView(); renderMods(); }
+  else if (view === "game") renderGameView();
+  else renderSettings();
+}
+
+async function selectPackUI(id) {
+  if (!state.packs.some(p => p.id === id)) return;
+  packId = id; selectPack(id);
+  $("#search").value = "";
+  renderAll();
+  if (!modsCache[id]) { modsCache[id] = await listMods(id) || []; if (packId === id) renderMods(); }
+}
+
+// ---- login ----
+function openLogin() { $("#loginIntro").hidden = false; $("#loginCode").hidden = true; $("#loginErr").textContent = ""; $("#loginVeil").classList.add("on"); }
+function closeLogin() { $("#loginVeil").classList.remove("on"); }
+$("#loginClose").onclick = closeLogin;
+$("#loginGo").onclick = async () => {
+  $("#loginErr").textContent = ""; $("#loginGo").disabled = true;
+  try {
+    const r = await startLogin();
+    loginUrl = r.url;
+    $("#codeText").textContent = r.code;
+    $("#loginUrl").textContent = r.url.replace(/^https?:\/\//, "");
+    $("#loginIntro").hidden = true; $("#loginCode").hidden = false;
+    openURL(r.url);
+  } catch (e) { $("#loginErr").textContent = String(e); }
+  finally { $("#loginGo").disabled = false; }
+};
+$("#loginOpen").onclick = () => { copyText($("#codeText").textContent); openURL(loginUrl); };
+$("#loginCancel").onclick = () => { cancelLogin(); openLogin(); };
+$("#codeText").onclick = () => copyText($("#codeText").textContent);
+
+// ---- other controls ----
+$("#settingsBtn").onclick = () => { view = "settings"; renderAll(); };
+$("#accountBtn").onclick = () => { if (state.account) { view = "settings"; renderAll(); } else openLogin(); };
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => { tab = t.dataset.tab; renderPackView(); });
+$("#search").oninput = renderMods;
+$("#psGame").onclick = () => openGameFolder(packId);
+$("#psSrc").onclick = () => openPackFolder(packId);
+$("#openData").onclick = () => openDataFolder();
+$("#ram").oninput = updateRamLabel;
+$("#ram").onchange = () => { state.ramMB = +$("#ram").value; setRam(state.ramMB); };
+$("#pubOpen").onclick = () => openPublishDir();
+$("#pubClose").onclick = () => $("#pubVeil").classList.remove("on");
+async function refreshState(reload) {
+  state = await getState();
+  if (reload) {
+    for (const k in modsCache) delete modsCache[k];
+    if (!state.packs.some(p => p.id === packId)) packId = (state.packs[0] || {}).id;
+    if (!state.games.some(g => g.id === gameId)) gameId = state.games[0].id;
+  }
+  renderAll();
+  if (packId && !modsCache[packId]) { modsCache[packId] = await listMods(packId) || []; renderMods(); }
+}
+$("#crashClose").onclick = () => $("#crashVeil").classList.remove("on");
+$("#crashFolder").onclick = () => openGameFolder(crashPack || packId);
+$("#gvPlay").onclick = async () => {
+  $("#gvErr").textContent = "";
+  try { await launchGame(gameId); } catch (e) { $("#gvErr").textContent = String(e); }
+};
+$("#mode").querySelectorAll("button").forEach(btn => btn.onclick = () => {
+  const p = curPack();
+  if (!p || state.busyPack) return;
+  p.solo = btn.dataset.mode === "solo";
+  setSolo(p.id, p.solo);
+  renderPlay();
+  setStatus(p.solo ? "Mode solo : pas de connexion au serveur." : "Mode serveur : connexion directe à " + p.server + ".");
+  setProgress(-1);
+});
+$("#play").onclick = async () => {
+  if (!state.account) return openLogin();
+  state.busyPack = packId; renderPlay(); renderPacks();
+  $("#play").textContent = "…";
+  setStatus("Préparation…"); setProgress(null);
+  try { await play(packId); }
+  catch (e) { state.busyPack = ""; renderPlay(); renderPacks(); setStatus(String(e), true); setProgress(-1); }
+};
+
+// ---- events from Go ----
+window.__onEvent = (ev, d) => {
+  switch (ev) {
+    case "status": setStatus(d); setProgress(null); break;
+    case "progress":
+      setStatus(`${d.label} : ${d.done.toLocaleString("fr-FR")} / ${d.total.toLocaleString("fr-FR")}`);
+      setProgress(d.total ? d.done / d.total : null);
+      break;
+    case "playing":
+      setStatus("Minecraft est lancé. Bon jeu !"); setProgress(1);
+      if (d === packId) $("#play").textContent = "EN JEU";
+      break;
+    case "idle":
+      state.busyPack = "";
+      if (!$("#status").classList.contains("err")) { setStatus("Prêt."); setProgress(-1); }
+      if (view === "game" && curGame().type === "minecraft") { renderPacks(); renderPlay(); }
+      break;
+    case "error": setStatus(d, true); setProgress(-1); break;
+    case "crash":
+      crashPack = d.pack;
+      $("#crashMsg").textContent = d.message;
+      $("#crashLog").textContent = d.log || "(pas de journal)";
+      $("#crashVeil").classList.add("on");
+      setStatus(d.message, true); setProgress(-1);
+      break;
+    case "loginDone": state.account = d; closeLogin(); renderAll(); setStatus("Connecté en tant que " + d.name + "."); break;
+    case "loginError": openLogin(); $("#loginErr").textContent = d; break;
+    case "loggedOut": state.account = null; renderAll(); break;
+    case "updating": state.updating = true; renderPlay(); if (view === "settings") renderUpdateRows(); break;
+    case "restarting": setStatus("Nouvelle version du launcher installée, redémarrage…"); setProgress(1); break;
+    case "updated": {
+      state.updating = false;
+      setStatus(d.message, !d.ok); setProgress(-1);
+      refreshState(d.reload);
+      break;
+    }
+    case "published":
+      state.updating = false;
+      setStatus(`Version ${d.version} prête à envoyer (${d.files} fichiers).`); setProgress(-1);
+      $("#pubMsg").textContent = `Version ${d.version} : ${d.files} fichiers, ${d.sizeMB} Mo de nouveaux fichiers.`;
+      $("#pubUrl").textContent = d.url;
+      {
+        const gh = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/releases/.exec(d.url || "");
+        $("#pubStepsGithub").hidden = !gh; $("#pubStepsServer").hidden = !!gh;
+        $("#pubGh").hidden = !gh; $("#pubClose").classList.toggle("primary", !gh);
+        $("#pubTag").textContent = "v" + d.version;
+        $("#pubGh").onclick = () => { openURL(`https://github.com/${gh[1]}/${gh[2]}/releases/new?tag=v${d.version}&title=Version%20${d.version}`); };
+      }
+      $("#pubVeil").classList.add("on");
+      refreshState(false);
+      break;
+  }
+};
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") { closeLogin(); ["#crashVeil", "#pubVeil"].forEach(s => $(s).classList.remove("on")); }
+  if (e.key === "F5" || (e.ctrlKey && "rRpPfF".includes(e.key))) e.preventDefault();
+});
+document.addEventListener("contextmenu", e => { if (!e.target.closest("input, pre")) e.preventDefault(); });
+
+(async function init() {
+  state = await getState();
+  const firstMC = state.games.find(g => g.type === "minecraft");
+  gameId = firstMC ? firstMC.id : state.games[0].id;
+  packId = state.packs.some(p => p.id === state.lastPack) ? state.lastPack : (state.packs[0] || {}).id;
+  renderAll();
+  if (!state.account) openLogin();
+  if (packId) { modsCache[packId] = await listMods(packId) || []; renderMods(); }
+})();
+</script>
+</body>
+</html>
