@@ -47,7 +47,7 @@ func TestPublishAndUpdateEndToEnd(t *testing.T) {
 	write(t, filepath.Join(admin, "config", "mod.toml"), "default=1")
 	write(t, filepath.Join(admin, "config", "added.toml"), "brand-new")
 
-	exeDir, dataDir = admin, t.TempDir()
+	baseDir, dataDir = admin, t.TempDir()
 	t.Setenv("LAUNCHER_DIR", admin)
 	t.Setenv("LAUNCHER_DATA", dataDir)
 	hashCache = nil
@@ -144,13 +144,13 @@ func TestPublishAndUpdateEndToEnd(t *testing.T) {
 }
 
 func TestSafeLocal(t *testing.T) {
-	exeDir = t.TempDir()
+	baseDir = t.TempDir()
 	for _, bad := range []string{"../evil.jar", "mods/../../x", "C:/Windows/x", "/"} {
 		if _, err := safeLocal(bad); err == nil {
 			t.Errorf("%q accepted", bad)
 		}
 	}
-	if p, err := safeLocal("mods/a b [Fabric].jar"); err != nil || !strings.HasPrefix(p, exeDir) {
+	if p, err := safeLocal("mods/a b [Fabric].jar"); err != nil || !strings.HasPrefix(p, baseDir) {
 		t.Errorf("good path refused: %v", err)
 	}
 }
@@ -181,5 +181,56 @@ func TestSwapExecutable(t *testing.T) {
 	}
 	if read(t, exe) != "NEW LAUNCHER v2" {
 		t.Fatal("launcher damaged by a failed update")
+	}
+}
+
+func TestStandaloneExeBootstrap(t *testing.T) {
+	data := t.TempDir()
+	t.Setenv("LAUNCHER_DIR", "")
+	os.Unsetenv("LAUNCHER_DIR")
+	t.Setenv("LAUNCHER_DATA", data)
+	hashCache = nil
+	if err := loadConfig(); err != nil {
+		t.Fatal(err)
+	}
+	if !standalone || baseDir != filepath.Join(data, "fichiers") {
+		t.Fatalf("standalone=%v baseDir=%s", standalone, baseDir)
+	}
+	if !updatesEnabled() || len(cfg.Packs) == 0 || !strings.Contains(cfg.UpdateURL, "mises-a-jour") {
+		t.Fatalf("embedded config not used: %+v", cfg)
+	}
+	if read(t, filepath.Join(baseDir, "launcher.json")) == "<absent>" {
+		t.Fatal("launcher.json not written")
+	}
+	if isAdmin() {
+		t.Fatal("a player must not be admin")
+	}
+
+	// simulate the first update from a (test) server: mods land in <data>/fichiers/mods
+	pub, sec, _ := generateKeys()
+	admin := t.TempDir()
+	srv := httptest.NewServer(http.FileServer(http.Dir(filepath.Join(admin, "publication", "en-ligne"))))
+	defer srv.Close()
+	write(t, filepath.Join(admin, "launcher.json"), `{"name":"Client","updateUrl":"`+srv.URL+`","updateKey":"`+pub+`","packs":[{"id":"client","name":"Client"}]}`)
+	write(t, filepath.Join(admin, "publication", "cle-secrete.txt"), sec)
+	write(t, filepath.Join(admin, "mods", "x.jar"), "XXX")
+	playerBase, playerCfg := baseDir, cfg
+	baseDir = admin
+	cfg = Config{Name: "Client", UpdateURL: srv.URL, UpdateKey: pub, Packs: []Pack{{ID: "client", Name: "Client", Folder: ""}}}
+	_ = cfg.normalize()
+	if _, err := publish(func(string) {}, func(string, int, int) {}); err != nil {
+		t.Fatal(err)
+	}
+	baseDir, cfg = playerBase, playerCfg
+	cfg.UpdateURL, cfg.UpdateKey = srv.URL, pub
+	m, err := fetchManifest()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := applyUpdate(m, false, func(string) {}, func(string, int, int) {}); err != nil {
+		t.Fatal(err)
+	}
+	if read(t, filepath.Join(data, "fichiers", "mods", "x.jar")) != "XXX" {
+		t.Fatal("mod not downloaded into the data folder")
 	}
 }

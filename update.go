@@ -108,7 +108,7 @@ func safeLocal(p string) (string, error) {
 	if clean == "/" || strings.Contains(p, "..") || strings.Contains(p, ":") {
 		return "", fmt.Errorf("chemin refusé : %s", p)
 	}
-	return filepath.Join(exeDir, filepath.FromSlash(strings.TrimPrefix(clean, "/"))), nil
+	return filepath.Join(baseDir, filepath.FromSlash(strings.TrimPrefix(clean, "/"))), nil
 }
 
 // ---------- hash cache (avoid re-hashing 150 Mo of mods at each start) ----------
@@ -205,7 +205,7 @@ func applyUpdate(m *Manifest, allowSelf bool, status func(string), progress Prog
 
 	// 2. launcher.json
 	if m.Config != nil {
-		local := filepath.Join(exeDir, "launcher.json")
+		local := filepath.Join(baseDir, "launcher.json")
 		if !sameFile(local, m.Config) {
 			status("Mise à jour de la liste des packs…")
 			if err := downloadFile(updTask(m.Config, local+".new")); err != nil {

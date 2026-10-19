@@ -537,7 +537,12 @@ function renderMods() {
   const q = $("#search").value.trim().toLowerCase();
   const list = q ? mods.filter(m => (m.name + " " + m.file + " " + m.description).toLowerCase().includes(q)) : mods;
   $("#modCount").textContent = q ? `${list.length} sur ${mods.length}` : `${mods.length} mods`;
-  if (!mods.length) { grid.innerHTML = `<div class="empty">Ce pack n'a aucun mod (dossier mods vide ou introuvable).</div>`; return; }
+  if (!mods.length) {
+    grid.innerHTML = state.updating
+      ? `<div class="empty">Téléchargement du pack en cours… les mods apparaîtront ici.</div>`
+      : `<div class="empty">Ce pack n'a aucun mod (dossier mods vide ou introuvable).</div>`;
+    return;
+  }
   if (!list.length) { grid.innerHTML = `<div class="empty">Aucun mod ne correspond à « ${esc(q)} ».</div>`; return; }
   grid.innerHTML = list.map(m => `
     <div class="mod" title="${esc(m.description || m.file)}">
@@ -750,7 +755,7 @@ window.__onEvent = (ev, d) => {
     case "loginDone": state.account = d; closeLogin(); renderAll(); setStatus("Connecté en tant que " + d.name + "."); break;
     case "loginError": openLogin(); $("#loginErr").textContent = d; break;
     case "loggedOut": state.account = null; renderAll(); break;
-    case "updating": state.updating = true; renderPlay(); if (view === "settings") renderUpdateRows(); break;
+    case "updating": state.updating = true; renderPlay(); if (view === "settings") renderUpdateRows(); else if (curPack()) renderMods(); break;
     case "restarting": setStatus("Nouvelle version du launcher installée, redémarrage…"); setProgress(1); break;
     case "updated": {
       state.updating = false;

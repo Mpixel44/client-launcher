@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -62,7 +63,7 @@ type Settings struct {
 }
 
 var (
-	exeDir  string
+	baseDir string
 	dataDir string
 	cfg     Config
 )
@@ -152,40 +153,78 @@ func (c *Config) normalize() error {
 	return nil
 }
 
+// defaultLauncherJSON is the configuration built into the exe, so a player can
+// receive Launcher.exe alone: everything else is downloaded by the updater.
+//
+//go:embed res/default-launcher.json
+var defaultLauncherJSON []byte
+
+// standalone is true when the exe runs without a launcher.json next to it.
+// Pack files then live in <data>/fichiers instead of next to the exe.
+var standalone bool
+
+func dataDirFor(name string) string {
+	if d := os.Getenv("LAUNCHER_DATA"); d != "" {
+		return d
+	}
+	base, err := os.UserConfigDir() // %APPDATA% on Windows
+	if err != nil {
+		base = os.TempDir()
+	}
+	return filepath.Join(base, "."+slug(name)+"-launcher")
+}
+
 func loadConfig() error {
 	exe, err := os.Executable()
 	if err != nil {
 		return err
 	}
 	exe, _ = filepath.EvalSymlinks(exe)
-	exeDir = filepath.Dir(exe)
+	baseDir = filepath.Dir(exe)
 	if d := os.Getenv("LAUNCHER_DIR"); d != "" { // handy for testing
-		exeDir = d
+		baseDir = d
 	}
 
-	path := filepath.Join(exeDir, "launcher.json")
-	if b, err := os.ReadFile(path); err == nil {
-		cfg = Config{}
-		if err := json.Unmarshal(b, &cfg); err != nil {
+	path := filepath.Join(baseDir, "launcher.json")
+	_, statErr := os.Stat(path)
+	standalone = statErr != nil
+	var ownerName string
+	if standalone {
+		var emb Config
+		if err := json.Unmarshal(defaultLauncherJSON, &emb); err != nil {
 			return err
 		}
-	} else {
-		cfg = defaultConfig()
-		b, _ := json.MarshalIndent(cfg, "", "  ")
-		_ = os.WriteFile(path, b, 0o644)
+		if emb.Name == "" {
+			emb.Name = "Client"
+		}
+		ownerName = emb.Name
+		baseDir = filepath.Join(dataDirFor(ownerName), "fichiers")
+		path = filepath.Join(baseDir, "launcher.json")
+		if _, err := os.Stat(path); err != nil {
+			if err := os.MkdirAll(baseDir, 0o755); err != nil {
+				return err
+			}
+			if err := os.WriteFile(path, defaultLauncherJSON, 0o644); err != nil {
+				return err
+			}
+		}
+	}
+
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	cfg = Config{}
+	if err := json.Unmarshal(b, &cfg); err != nil {
+		return err
 	}
 	if err := cfg.normalize(); err != nil {
 		return err
 	}
-
-	base, err := os.UserConfigDir() // %APPDATA% on Windows
-	if err != nil {
-		base = exeDir
+	if ownerName == "" {
+		ownerName = cfg.Name
 	}
-	dataDir = filepath.Join(base, "."+slug(cfg.Name)+"-launcher")
-	if d := os.Getenv("LAUNCHER_DATA"); d != "" {
-		dataDir = d
-	}
+	dataDir = dataDirFor(ownerName)
 	if err := os.MkdirAll(dataDir, 0o755); err != nil {
 		return err
 	}
@@ -262,7 +301,7 @@ func pAssets() string             { return filepath.Join(dataDir, "assets") }
 func pRuntime() string            { return filepath.Join(dataDir, "runtime") }
 func pWebview() string            { return filepath.Join(dataDir, "webview") }
 func pInstance(p *Pack) string    { return filepath.Join(dataDir, "instances", p.ID) }
-func pPackSource(p *Pack) string  { return filepath.Join(exeDir, filepath.FromSlash(p.Folder)) }
+func pPackSource(p *Pack) string  { return filepath.Join(baseDir, filepath.FromSlash(p.Folder)) }
 func pPackModsSrc(p *Pack) string { return filepath.Join(pPackSource(p), "mods") }
 
 // cleanServer turns what people paste ("http://play.example.com/", " play.example.com:25565 ")

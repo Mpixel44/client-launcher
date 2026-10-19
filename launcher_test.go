@@ -99,7 +99,7 @@ func TestModInfos(t *testing.T) {
 	if dir == "" {
 		t.Skip("MODS_DIR not set")
 	}
-	exeDir = dir
+	baseDir = dir
 	cfg = defaultConfig()
 	_ = cfg.normalize()
 	m := readModInfos(&cfg.Packs[0])
@@ -116,11 +116,11 @@ func TestModInfos(t *testing.T) {
 }
 
 func TestLegacyConfigAndMigration(t *testing.T) {
-	exeDir = t.TempDir()
+	baseDir = t.TempDir()
 	dataDir = t.TempDir()
-	os.WriteFile(filepath.Join(exeDir, "launcher.json"), []byte(`{"name":"Client","minecraft":"1.21.1","server":"a.b:25565","defaultRamMB":8192}`), 0o644)
+	os.WriteFile(filepath.Join(baseDir, "launcher.json"), []byte(`{"name":"Client","minecraft":"1.21.1","server":"a.b:25565","defaultRamMB":8192}`), 0o644)
 	os.MkdirAll(filepath.Join(dataDir, "game", "saves", "MonMonde"), 0o755)
-	t.Setenv("LAUNCHER_DIR", exeDir)
+	t.Setenv("LAUNCHER_DIR", baseDir)
 	t.Setenv("LAUNCHER_DATA", dataDir)
 	if err := loadConfig(); err != nil {
 		t.Fatal(err)
@@ -134,7 +134,7 @@ func TestLegacyConfigAndMigration(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dataDir, "instances", "client", "saves", "MonMonde")); err != nil {
 		t.Fatal("world not migrated")
 	}
-	if pPackModsSrc(&cfg.Packs[0]) != filepath.Join(exeDir, "mods") {
+	if pPackModsSrc(&cfg.Packs[0]) != filepath.Join(baseDir, "mods") {
 		t.Fatal("mods path", pPackModsSrc(&cfg.Packs[0]))
 	}
 }

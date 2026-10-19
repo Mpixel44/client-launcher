@@ -481,8 +481,8 @@ func (a *App) doUpdate(allowSelf bool) {
 			}
 			if res.ConfigChanged {
 				a.reloadConfig()
-				reload = true
 			}
+			reload = res.ConfigChanged || res.Downloaded+res.Removed > 0
 			switch {
 			case res.Downloaded+res.Removed > 0 || res.ConfigChanged:
 				msg = fmt.Sprintf("Mis à jour (version %d) : %d fichier(s) téléchargé(s), %d retiré(s).", m.Version, res.Downloaded, res.Removed)

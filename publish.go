@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-func pPublication() string { return filepath.Join(exeDir, "publication") }
+func pPublication() string { return filepath.Join(baseDir, "publication") }
 func pSecretKey() string   { return filepath.Join(pPublication(), "cle-secrete.txt") }
 func pOnline() string      { return filepath.Join(pPublication(), "en-ligne") }
 
@@ -87,7 +87,7 @@ func publish(status func(string), progress Progress) (*PublishResult, error) {
 	m := Manifest{Version: version, Published: time.Now().Format(time.RFC3339)}
 	var total int64
 	add := func(abs string) (*UpdFile, error) {
-		rel, err := filepath.Rel(exeDir, abs)
+		rel, err := filepath.Rel(baseDir, abs)
 		if err != nil || strings.HasPrefix(rel, "..") {
 			return nil, fmt.Errorf("%s n'est pas dans le dossier du launcher", abs)
 		}
@@ -121,7 +121,7 @@ func publish(status func(string), progress Progress) (*PublishResult, error) {
 			m.Launcher = f
 		}
 	}
-	cf, err := add(filepath.Join(exeDir, "launcher.json"))
+	cf, err := add(filepath.Join(baseDir, "launcher.json"))
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +139,7 @@ func publish(status func(string), progress Progress) (*PublishResult, error) {
 	for i := range cfg.Packs {
 		p := &cfg.Packs[i]
 		modsDir := pPackModsSrc(p)
-		rel, _ := filepath.Rel(exeDir, modsDir)
+		rel, _ := filepath.Rel(baseDir, modsDir)
 		m.Mirror = append(m.Mirror, filepath.ToSlash(rel))
 		if entries, err := os.ReadDir(modsDir); err == nil {
 			for _, e := range entries {

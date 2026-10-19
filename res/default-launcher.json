@@ -1,0 +1,34 @@
+{
+  "name": "Client",
+  "defaultRamMB": 8192,
+  "microsoftClientId": "",
+  "updateUrl": "https://raw.githubusercontent.com/Mpixel44/client-launcher/mises-a-jour/",
+  "updateKey": "sAa5eDRQ9/h+bJWkphjBAnENWtyNDvt+IRSaPvikfh4=",
+  "games": [
+    {
+      "id": "minecraft",
+      "name": "Minecraft",
+      "type": "minecraft"
+    },
+    {
+      "id": "cs2",
+      "name": "Counter-Strike 2",
+      "short": "CS2",
+      "type": "steam",
+      "steamAppId": 730,
+      "comingSoon": true
+    }
+  ],
+  "packs": [
+    {
+      "id": "client",
+      "name": "Client",
+      "description": "Le pack principal : aventure, donjons, nouveaux biomes et optimisation.",
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "fabricLoader": "",
+      "folder": "",
+      "server": "minecraft.nexusdescartes.com"
+    }
+  ]
+}
