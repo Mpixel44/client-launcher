@@ -56,7 +56,8 @@ type PackView struct {
 	Server      string   `json:"server"`
 	Solo        bool     `json:"solo"`
 	Icon        string   `json:"icon"`
-	Extras      []string `json:"extras"` // names of external downloads (shaders…)
+	Shaders     []string `json:"shaders"`
+	Textures    []string `json:"textures"` // resource packs
 }
 
 type StateView struct {
@@ -97,7 +98,7 @@ func (a *App) GetState() StateView {
 			loader = "Vanilla"
 		}
 		s.Packs = append(s.Packs, PackView{ID: p.ID, Name: p.Name, Description: p.Description,
-			Minecraft: p.Minecraft, Loader: loader, ModCount: countMods(p), Server: p.Server, Icon: packIcon(p), Extras: extraNames(p),
+			Minecraft: p.Minecraft, Loader: loader, ModCount: countMods(p), Server: p.Server, Icon: packIcon(p), Shaders: extraNames(p, "shaderpacks/"), Textures: extraNames(p, "resourcepacks/"),
 			Solo: a.settings.Solo[p.ID]})
 	}
 	return s
@@ -349,7 +350,10 @@ func (a *App) run(p *Pack, acc *Account, ram int, server string) error {
 		return fmt.Errorf("copie des mods impossible : %w", err)
 	}
 	if err := fetchPackDownloads(p, status, progress); err != nil {
-		return fmt.Errorf("téléchargement des shaders impossible : %w", err)
+		return fmt.Errorf("téléchargement des shaders / packs de textures impossible : %w", err)
+	}
+	if err := applyResourcePacks(p); err != nil {
+		return fmt.Errorf("activation des packs de textures impossible : %w", err)
 	}
 
 	if server != "" {
@@ -561,9 +565,12 @@ func (a *App) OpenPublishFolder() {
 	openFolder(pOnline())
 }
 
-func extraNames(p *Pack) []string {
+func extraNames(p *Pack, prefix string) []string {
 	var out []string
 	for _, d := range p.Downloads {
+		if !strings.HasPrefix(d.Path, prefix) {
+			continue
+		}
 		n := d.Name
 		if n == "" {
 			n = filepath.Base(d.Path)

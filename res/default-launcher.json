@@ -31,6 +31,76 @@
       "server": "minecraft.nexusdescartes.com",
       "downloads": [
         {
+          "name": "Nature X 11.1",
+          "url": "https://cdn.modrinth.com/data/8d8M3Qoz/versions/X4EQL1dV/Nature%20X%20-%2011.1.zip",
+          "path": "resourcepacks/Nature X - 11.1.zip",
+          "sha1": "dc2f7957869b6e4e391c16480f665247f97adaf7",
+          "size": 1801457
+        },
+        {
+          "name": "Better Leaves 9.5",
+          "url": "https://cdn.modrinth.com/data/uvpymuxq/versions/XWtayRKd/Better-Leaves-9.5.zip",
+          "path": "resourcepacks/Better-Leaves-9.5.zip",
+          "sha1": "78b7e6cbb1661716423429d2c46ab08266cdf1f8",
+          "size": 1923769
+        },
+        {
+          "name": "Spawned Eggs",
+          "url": "https://cdn.modrinth.com/data/yPBwDzHA/versions/4FFWDY0J/Spawned_Eggs_1.16-26.2_r1.zip",
+          "path": "resourcepacks/Spawned_Eggs_1.16-26.2_r1.zip",
+          "sha1": "711c7ca531c136fc189111a5706fe7c9be19207f",
+          "size": 131750
+        },
+        {
+          "name": "Simple Grass Flowers 1.9.5",
+          "url": "https://cdn.modrinth.com/data/ti9KkMHm/versions/JDKDkDow/Simple%20Grass%20Flowers%20v1.9.5.zip",
+          "path": "resourcepacks/Simple Grass Flowers v1.9.5.zip",
+          "sha1": "2f430322ca2afdee2962180a23a577bbb7dea240",
+          "size": 187196
+        },
+        {
+          "name": "Recolourful Containers 3.1.2",
+          "url": "https://cdn.modrinth.com/data/lewweaHO/versions/yYHOwoiD/Recolourful%20Containers%203.1.2%20%281.19.4%2B%29.zip",
+          "path": "resourcepacks/Recolourful Containers 3.1.2 (1.19.4+).zip",
+          "sha1": "bcbccd691b4d857f80f9b930312fb1b31d87226f",
+          "size": 2104925
+        },
+        {
+          "name": "Fresh Animations 1.10.4",
+          "url": "https://cdn.modrinth.com/data/50dA9Sha/versions/xN57JJts/FreshAnimations_v1.10.4.zip",
+          "path": "resourcepacks/FreshAnimations_v1.10.4.zip",
+          "sha1": "73db740a6868e043c5e615c036fca2c912615b6e",
+          "size": 850941
+        },
+        {
+          "name": "Fancy Crops 1.3",
+          "url": "https://cdn.modrinth.com/data/UGEVQ6t9/versions/ZJEBZjg6/Fancy%20Crops%20v1.3.zip",
+          "path": "resourcepacks/Fancy Crops v1.3.zip",
+          "sha1": "788e5169eb064b696b2e20d4c5d998cceb387a2e",
+          "size": 92779
+        },
+        {
+          "name": "Better Lanterns 1.2",
+          "url": "https://cdn.modrinth.com/data/PGGrfcvL/versions/jRAsb6KQ/Better%2BLanterns%2Bv1.2%28mc-1.21%29.zip",
+          "path": "resourcepacks/Better+Lanterns+v1.2(mc-1.21).zip",
+          "sha1": "fa1e0dc78b535df918dca5ba453ebbdb6415ce48",
+          "size": 51529
+        },
+        {
+          "name": "Even Better Enchants v2",
+          "url": "https://cdn.modrinth.com/data/6udpuGCH/versions/mXaMyhFE/EvenBetterEnchants_v2_r1.zip",
+          "path": "resourcepacks/EvenBetterEnchants_v2_r1.zip",
+          "sha1": "e1bb05c0a9d61c345bf020d50f0d13d27a233752",
+          "size": 242292
+        },
+        {
+          "name": "Enchant Icons 1.3",
+          "url": "https://cdn.modrinth.com/data/6vhHOIKw/versions/L6NvKcZN/enchant%20icons%201.21%20v1.3.zip",
+          "path": "resourcepacks/enchant icons 1.21 v1.3.zip",
+          "sha1": "f6f810c40d178b636b36a24bce40e91be9afe8ce",
+          "size": 168408
+        },
+        {
           "name": "Complementary Reimagined r5.9.3",
           "url": "https://cdn.modrinth.com/data/HVnmMxH1/versions/Bqen1mJX/ComplementaryReimagined_r5.9.3.zip",
           "path": "shaderpacks/ComplementaryReimagined_r5.9.3.zip",
@@ -44,6 +114,27 @@
           "sha1": "2ee08300e1d6f039e63eae8484dddf57b3aaaf67",
           "size": 553400
         }
+      ],
+      "resourcePacks": [
+        "betterbeds:fancyconnectedbeds",
+        "file/Nature X - 11.1.zip",
+        "file/Better-Leaves-9.5.zip",
+        "subtle_effects:biome_color_water_particles",
+        "natures_spirit:plank_consistency",
+        "natures_spirit:emissive_ores_compatibility",
+        "musicnotification:dark_mode",
+        "minecraft:supporteatinganimation",
+        "file/Spawned_Eggs_1.16-26.2_r1.zip",
+        "file/Simple Grass Flowers v1.9.5.zip",
+        "file/Recolourful Containers 3.1.2 (1.19.4+).zip",
+        "file/FreshAnimations_v1.10.4.zip",
+        "file/Fancy Crops v1.3.zip",
+        "file/Better+Lanterns+v1.2(mc-1.21).zip",
+        "file/EvenBetterEnchants_v2_r1.zip",
+        "continuity:glass_pane_culling_fix",
+        "continuity:default",
+        "fabric",
+        "vanilla"
       ]
     }
   ]

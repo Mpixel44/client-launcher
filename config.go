@@ -40,6 +40,9 @@ type Pack struct {
 	// Files each player downloads straight from their official host (e.g. Modrinth),
 	// for content whose licence forbids re-hosting it (shaders…).
 	Downloads []RemoteFile `json:"downloads,omitempty"`
+	// Resource packs to enable, top = highest priority (same order as the in-game list).
+	// Applied once per change, so players can still customise afterwards.
+	ResourcePacks []string `json:"resourcePacks,omitempty"`
 }
 
 type RemoteFile struct {

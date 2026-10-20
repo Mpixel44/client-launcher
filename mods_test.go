@@ -38,3 +38,42 @@ func TestPackDownloads(t *testing.T) {
 	}
 	_ = strings.TrimSpace
 }
+
+func TestApplyResourcePacks(t *testing.T) {
+	dataDir = t.TempDir()
+	p := &Pack{ID: "client", ResourcePacks: []string{"betterbeds:fancyconnectedbeds", "file/Nature X - 11.1.zip", "file/Better+Lanterns+v1.2(mc-1.21).zip", "fabric", "vanilla"}}
+	opt := filepath.Join(pInstance(p), "options.txt")
+	write(t, opt, "version:3955\nresourcePacks:[\"fabric\"]\nlang:fr_fr\n")
+	if err := applyResourcePacks(p); err != nil {
+		t.Fatal(err)
+	}
+	got := read(t, opt)
+	want := `resourcePacks:["vanilla","fabric","file/Better+Lanterns+v1.2(mc-1.21).zip","file/Nature X - 11.1.zip","betterbeds:fancyconnectedbeds"]`
+	if !strings.Contains(got, want) || !strings.Contains(got, "lang:fr_fr") {
+		t.Fatalf("options.txt:\n%s", got)
+	}
+	// player reorders → launcher keeps it on next launch
+	write(t, opt, "version:3955\nresourcePacks:[\"vanilla\"]\nlang:fr_fr\n")
+	if err := applyResourcePacks(p); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(read(t, opt), `resourcePacks:["vanilla"]`) {
+		t.Fatal("player choice overwritten")
+	}
+	// new published list → applied again
+	p.ResourcePacks = append([]string{"file/x.zip"}, p.ResourcePacks...)
+	if err := applyResourcePacks(p); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(read(t, opt), `"betterbeds:fancyconnectedbeds","file/x.zip"]`) {
+		t.Fatal("new list not applied")
+	}
+	// fresh game folder: options.txt created
+	p2 := &Pack{ID: "neuf", ResourcePacks: []string{"fabric", "vanilla"}}
+	if err := applyResourcePacks(p2); err != nil {
+		t.Fatal(err)
+	}
+	if read(t, filepath.Join(pInstance(p2), "options.txt")) != "resourcePacks:[\"vanilla\",\"fabric\"]\n" {
+		t.Fatal("new options.txt wrong")
+	}
+}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io"
 	"os"
 	"path/filepath"
@@ -134,6 +135,64 @@ func fetchPackDownloads(p *Pack, status func(string), progress Progress) error {
 	if len(tasks) == 0 {
 		return nil
 	}
-	status("Vérification des shaders et fichiers externes…")
-	return downloadAll("Shaders", tasks, true, 4, progress)
+	status("Vérification des shaders et packs de textures…")
+	return downloadAll("Shaders et packs de textures", tasks, true, 4, progress)
+}
+
+// applyResourcePacks writes the pack's resource pack order into options.txt.
+// It only does so when the published list changed since the last time, so a
+// player who later rearranges their packs keeps their own choice.
+func applyResourcePacks(p *Pack) error {
+	if len(p.ResourcePacks) == 0 {
+		return nil
+	}
+	order := make([]string, 0, len(p.ResourcePacks)) // options.txt: lowest priority first
+	for i := len(p.ResourcePacks) - 1; i >= 0; i-- {
+		order = append(order, p.ResourcePacks[i])
+	}
+	var buf strings.Builder
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	if err := enc.Encode(order); err != nil {
+		return err
+	}
+	list := strings.TrimSpace(buf.String())
+	sum := sha256hex([]byte(list))
+
+	inst := pInstance(p)
+	marker := filepath.Join(inst, ".launcher-resourcepacks")
+	optPath := filepath.Join(inst, "options.txt")
+	if b, err := os.ReadFile(marker); err == nil && strings.TrimSpace(string(b)) == sum {
+		if _, err := os.Stat(optPath); err == nil {
+			return nil
+		}
+	}
+	if err := os.MkdirAll(inst, 0o755); err != nil {
+		return err
+	}
+	var lines []string
+	if b, err := os.ReadFile(optPath); err == nil {
+		lines = strings.Split(strings.ReplaceAll(string(b), "\r\n", "\n"), "\n")
+	}
+	done := false
+	for i, l := range lines {
+		if strings.HasPrefix(l, "resourcePacks:") {
+			lines[i] = "resourcePacks:" + list
+			done = true
+		}
+	}
+	if !done {
+		if len(lines) > 0 && lines[len(lines)-1] == "" {
+			lines = lines[:len(lines)-1]
+		}
+		lines = append(lines, "resourcePacks:"+list)
+	}
+	out := strings.Join(lines, "\n")
+	if !strings.HasSuffix(out, "\n") {
+		out += "\n"
+	}
+	if err := os.WriteFile(optPath, []byte(out), 0o644); err != nil {
+		return err
+	}
+	return os.WriteFile(marker, []byte(sum), 0o644)
 }
