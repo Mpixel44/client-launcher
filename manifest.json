@@ -1,15 +1,15 @@
 {
-  "version": 4,
-  "published": "2026-10-20T02:02:19+02:00",
+  "version": 5,
+  "published": "2026-10-20T02:10:40+02:00",
   "launcher": {
     "path": "Launcher.exe",
-    "sha256": "36f39e6573b71d8f25c0693ad3645587609300f39db16f2fdfb9ac3f5b70ad04",
-    "size": 7534592
+    "sha256": "7b3c89b500fa55bd45ebc1b0df2df83a7a9612838029a8fb06f8a0435c05276d",
+    "size": 7548416
   },
   "config": {
     "path": "launcher.json",
-    "sha256": "bb32396bd2a297b61830ebea8a0cb1b9b58a857bddfba114458146eec0447e09",
-    "size": 1518
+    "sha256": "43044f3a572776837431a1595c471748a84c9b42f964d5b4accc5b19870caa3b",
+    "size": 5572
   },
   "files": [
     {
