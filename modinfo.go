@@ -47,6 +47,19 @@ func readModInfos(p *Pack) []ModInfo {
 		readFabricMeta(filepath.Join(dir, e.Name()), &mi)
 		out = append(out, mi)
 	}
+	for _, d := range downloadedMods(p) {
+		name := strings.TrimPrefix(d.Path, "mods/")
+		mi := ModInfo{File: name, Name: d.Name}
+		if mi.Name == "" {
+			mi.Name = strings.TrimSuffix(name, filepath.Ext(name))
+		}
+		if installed() {
+			if jar := filepath.Join(pInstance(p), "mods", name); fileExists(jar) {
+				readFabricMeta(jar, &mi)
+			}
+		}
+		out = append(out, mi)
+	}
 	sort.Slice(out, func(i, j int) bool { return strings.ToLower(out[i].Name) < strings.ToLower(out[j].Name) })
 	return out
 }

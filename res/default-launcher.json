@@ -114,6 +114,13 @@
           "path": "shaderpacks/ComplementaryUnbound_r5.9.3.zip",
           "sha1": "2ee08300e1d6f039e63eae8484dddf57b3aaaf67",
           "size": 553400
+        },
+        {
+          "name": "Simple Voice Chat",
+          "url": "https://cdn.modrinth.com/data/9eGKb6K1/versions/6PKCVne5/voicechat-fabric-1.21.1-2.6.24.jar",
+          "path": "mods/voicechat-fabric-1.21.1-2.6.24.jar",
+          "sha1": "5abe8af0b85acc94506caa0a36ccc59836956dd2",
+          "size": 5386871
         }
       ],
       "resourcePacks": [

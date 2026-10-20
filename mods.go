@@ -8,16 +8,29 @@ import (
 	"strings"
 )
 
-// countMods returns the number of .jar files shipped next to the launcher.
+// downloadedMods returns the pack's mods fetched from Modrinth ("mods/x.jar"
+// entries of downloads) rather than shipped in the mods folder.
+func downloadedMods(p *Pack) []RemoteFile {
+	var out []RemoteFile
+	for _, d := range p.Downloads {
+		if strings.HasPrefix(d.Path, "mods/") && strings.HasSuffix(strings.ToLower(d.Path), ".jar") &&
+			!strings.Contains(strings.TrimPrefix(d.Path, "mods/"), "/") {
+			out = append(out, d)
+		}
+	}
+	return out
+}
+
+// countMods returns the number of mods in the pack.
 func countMods(p *Pack) int {
 	if baseDir == "" {
 		return 0
 	}
+	n := len(downloadedMods(p))
 	entries, err := os.ReadDir(pPackModsSrc(p))
 	if err != nil {
-		return 0
+		return n
 	}
-	n := 0
 	for _, e := range entries {
 		if !e.IsDir() && strings.HasSuffix(strings.ToLower(e.Name()), ".jar") {
 			n++
@@ -37,6 +50,11 @@ func syncMods(p *Pack, skip map[string]bool, status func(string)) error {
 		return err
 	}
 	wanted := map[string]bool{}
+	for _, d := range downloadedMods(p) { // fetched afterwards by fetchPackDownloads
+		if name := strings.TrimPrefix(d.Path, "mods/"); !skip[name] {
+			wanted[strings.ToLower(name)] = true
+		}
+	}
 	if entries, err := os.ReadDir(src); err == nil {
 		for _, e := range entries {
 			name := e.Name()
@@ -145,8 +163,8 @@ func fetchPackDownloads(p *Pack, off map[string]bool, status func(string), progr
 	if len(tasks) == 0 {
 		return nil
 	}
-	status("Vérification des shaders et packs de textures…")
-	return downloadAll("Shaders et packs de textures", tasks, true, 4, progress)
+	status("Vérification des fichiers téléchargés (mods, shaders, packs de textures)…")
+	return downloadAll("Mods, shaders et packs de textures", tasks, true, 4, progress)
 }
 
 // applyResourcePacks writes the pack's resource pack order into options.txt.

@@ -443,11 +443,21 @@ func (a *App) run(p *Pack, acc *Account, ram int, server string) error {
 	a.mu.Lock()
 	delete(a.mods, p.ID) // the update may have changed the mods
 	a.mu.Unlock()
-	if err := syncMods(p, a.skippedFiles(p), status); err != nil {
+	skip := a.skippedFiles(p)
+	if err := syncMods(p, skip, status); err != nil {
 		return fmt.Errorf("copie des mods impossible : %w", err)
 	}
 	offExtras := a.disabledExtras(p.ID)
-	if err := fetchPackDownloads(p, offExtras, status, progress); err != nil {
+	offFetch := map[string]bool{}
+	for k := range offExtras {
+		offFetch[k] = true
+	}
+	for _, d := range downloadedMods(p) {
+		if skip[strings.TrimPrefix(d.Path, "mods/")] {
+			offFetch[d.Path] = true
+		}
+	}
+	if err := fetchPackDownloads(p, offFetch, status, progress); err != nil {
 		return fmt.Errorf("téléchargement des shaders / packs de textures impossible : %w", err)
 	}
 	if err := applyResourcePacks(p, offExtras); err != nil {
