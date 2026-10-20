@@ -121,6 +121,13 @@
           "path": "mods/voicechat-fabric-1.21.1-2.6.24.jar",
           "sha1": "5abe8af0b85acc94506caa0a36ccc59836956dd2",
           "size": 5386871
+        },
+        {
+          "name": "Vein Mining",
+          "url": "https://cdn.modrinth.com/data/bRAPbNyF/versions/5pbJBcoH/veinmining-fabric-5.0.0-beta%2B1.21.jar",
+          "path": "mods/veinmining-fabric-5.0.0-beta+1.21.jar",
+          "sha1": "ae95f354d74bfcb972a8e9b1b81b1d829bc5161a",
+          "size": 606425
         }
       ],
       "resourcePacks": [
