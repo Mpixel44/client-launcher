@@ -456,6 +456,7 @@ func (a *App) run(p *Pack, acc *Account, ram int, server string) error {
 	if err := applyConfigDefaults(p); err != nil {
 		return fmt.Errorf("réglages par défaut des mods impossibles : %w", err)
 	}
+	_ = ensureServerListed(p) // keep the server in the multiplayer list for reconnecting
 
 	if server != "" {
 		status("Lancement de " + p.Name + " et connexion à " + server + "…")
