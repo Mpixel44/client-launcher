@@ -128,6 +128,13 @@
           "path": "mods/veinmining-fabric-5.0.0-beta+1.21.jar",
           "sha1": "ae95f354d74bfcb972a8e9b1b81b1d829bc5161a",
           "size": 606425
+        },
+        {
+          "name": "Agility Enchantment",
+          "url": "https://cdn.modrinth.com/data/vytbdp9G/versions/gTPDkWZt/ly-agility-enchantment-v1.0.0-1.21-1.21.1.jar",
+          "path": "mods/ly-agility-enchantment-v1.0.0-1.21-1.21.1.jar",
+          "sha1": "20a7546319d876b3ddb2cdd7ed85be593748fa27",
+          "size": 46870
         }
       ],
       "resourcePacks": [
