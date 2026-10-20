@@ -1,6 +1,6 @@
 {
-  "version": 19,
-  "published": "2026-10-20T17:27:25+02:00",
+  "version": 20,
+  "published": "2026-10-20T17:30:47+02:00",
   "launcher": {
     "path": "Nexus.exe",
     "sha256": "323d4496a11b09621ea1f899cbe4efe5e00796a9c51b3e44a9c5c95cf955dd38",
@@ -426,11 +426,6 @@
       "path": "mods/rightclickharvest-fabric-4.6.1+1.21.1.jar",
       "sha256": "ad51405287cc76b6ce5f358b1ef36463ad5575520982fc697d531d3ceb74130f",
       "size": 286902
-    },
-    {
-      "path": "mods/server-auctions-1.4.3+1.21.1-fabric-nexus.jar",
-      "sha256": "3b7297a7731e34c0a9091fdac661cc909ebb6d2c9d400d8d25fd05ef7ae1cc04",
-      "size": 149055
     },
     {
       "path": "mods/skinlayers3d-fabric-1.11.4-mc1.21.1.jar",
