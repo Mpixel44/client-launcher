@@ -1,15 +1,15 @@
 {
-  "version": 18,
-  "published": "2026-10-20T16:54:52+02:00",
+  "version": 19,
+  "published": "2026-10-20T17:27:25+02:00",
   "launcher": {
     "path": "Nexus.exe",
-    "sha256": "cc3d7fef2692e56f4e8e437f67ae7cd68ad1f01f1bd3e0ef3428bd889d56c5b0",
-    "size": 7647744
+    "sha256": "323d4496a11b09621ea1f899cbe4efe5e00796a9c51b3e44a9c5c95cf955dd38",
+    "size": 7646720
   },
   "config": {
     "path": "launcher.json",
-    "sha256": "2e8b1441da37e8d4c7b64848cbfc4b51ab4c20c46b9193a012193d54896c48d5",
-    "size": 9303
+    "sha256": "52cc5b2a9f5836d1b5a48c4284d71d42c0ce1050661c8a1dc8ad3b081b61f5b2",
+    "size": 8358
   },
   "files": [
     {
@@ -288,6 +288,11 @@
       "size": 862450
     },
     {
+      "path": "mods/gravestones-1.4.2+1.21+A.jar",
+      "sha256": "5308ecde34b173999414042dd27bc9d48125bd56742a14fe005f22d287b45e4a",
+      "size": 296986
+    },
+    {
       "path": "mods/indium-1.0.35+mc1.21.jar",
       "sha256": "13bd78303315ca8f08ea19dfacce8566e152c56615e93a07c490965f390d4ed8",
       "size": 105000
@@ -393,6 +398,11 @@
       "size": 232325
     },
     {
+      "path": "mods/pneumonocore-1.3.0+1.21+A.jar",
+      "sha256": "1cd4f420375c0b589ca92e4e71f6f1ab308a999c7e16a88524df407f2e9b9af3",
+      "size": 165262
+    },
+    {
       "path": "mods/poses-fabric-1.21.1-1.3.0.jar",
       "sha256": "4e34d85f35eb09fe0d3360f17fa45ad0750f554554ecbd664c491636ea452064",
       "size": 98588
@@ -416,6 +426,11 @@
       "path": "mods/rightclickharvest-fabric-4.6.1+1.21.1.jar",
       "sha256": "ad51405287cc76b6ce5f358b1ef36463ad5575520982fc697d531d3ceb74130f",
       "size": 286902
+    },
+    {
+      "path": "mods/server-auctions-1.4.3+1.21.1-fabric-nexus.jar",
+      "sha256": "3b7297a7731e34c0a9091fdac661cc909ebb6d2c9d400d8d25fd05ef7ae1cc04",
+      "size": 149055
     },
     {
       "path": "mods/skinlayers3d-fabric-1.11.4-mc1.21.1.jar",
