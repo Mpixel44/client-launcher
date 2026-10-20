@@ -26,7 +26,7 @@ func countMods(p *Pack) int {
 // syncMods makes game/mods an exact copy of the mods folder shipped with the launcher.
 // Optional folders (config, resourcepacks, shaderpacks…) are copied only when missing,
 // so players keep their own settings.
-func syncMods(p *Pack, status func(string)) error {
+func syncMods(p *Pack, skip map[string]bool, status func(string)) error {
 	status("Synchronisation des mods…")
 	src := pPackModsSrc(p)
 	dst := filepath.Join(pInstance(p), "mods")
@@ -39,6 +39,9 @@ func syncMods(p *Pack, status func(string)) error {
 			name := e.Name()
 			if e.IsDir() || !strings.HasSuffix(strings.ToLower(name), ".jar") {
 				continue
+			}
+			if skip[name] {
+				continue // turned off by the player: removed from the game folder below
 			}
 			wanted[strings.ToLower(name)] = true
 			si, err := e.Info()

@@ -114,7 +114,7 @@ func TestPublishAndUpdateEndToEnd(t *testing.T) {
 	if len(cfg.Packs) != 2 {
 		t.Fatal("new pack not visible after reload")
 	}
-	if err := syncMods(&cfg.Packs[0], func(string) {}); err != nil {
+	if err := syncMods(&cfg.Packs[0], nil, func(string) {}); err != nil {
 		t.Fatal(err)
 	}
 	inst := pInstance(&cfg.Packs[0])

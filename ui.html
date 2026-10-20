@@ -181,6 +181,24 @@
   .mod b { display: block; font-weight: 550; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mod span { display: block; font-size: 11px; color: var(--faint); font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .empty { color: var(--muted); padding: 20px 0; }
+  .mod .meta { flex: 1; }
+  .mod.off { opacity: .5; }
+  .mod.off b { text-decoration: line-through; text-decoration-color: var(--faint); }
+  .sw {
+    position: relative; width: 36px; height: 20px; flex: none; border-radius: 999px;
+    background: var(--line); box-shadow: inset 0 0 0 1px var(--line-2); transition: background .15s;
+  }
+  .sw::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%;
+    background: var(--muted); transition: left .15s, background .15s;
+  }
+  .sw.on { background: rgba(116,253,8,.22); box-shadow: inset 0 0 0 1px rgba(116,253,8,.6); }
+  .sw.on::after { left: 19px; background: var(--grass); box-shadow: 0 0 8px rgba(116,253,8,.6); }
+  .sw:disabled { opacity: .45; cursor: not-allowed; }
+  .filt { display: flex; gap: 4px; margin-left: 14px; }
+  .filt button { padding: 5px 10px; border-radius: 999px; font-size: 12px; color: var(--muted); border: 1px solid var(--line); }
+  .filt button:hover { color: var(--text); }
+  .filt button.on { color: var(--text); border-color: var(--line-2); background: var(--panel-2); }
 
   /* settings-like rows */
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 14px; }
@@ -314,6 +332,11 @@
       <div id="tabMods" style="display:flex; flex-direction:column; min-height:0; flex:1">
         <div class="mods-head">
           <span class="count" id="modCount"></span>
+          <div class="filt" id="modFilter">
+            <button data-f="all" class="on">Tous</button>
+            <button data-f="opt" title="Mods visuels côté client : tu peux les désactiver sans gêner le serveur">Optionnels</button>
+            <button data-f="off">Désactivés</button>
+          </div>
           <input class="search" id="search" type="search" placeholder="Rechercher un mod…" autocomplete="off">
         </div>
         <div class="scroll"><div class="grid" id="grid"></div></div>
@@ -543,21 +566,57 @@ function renderMods() {
   const mods = modsCache[p.id];
   if (!mods) { grid.innerHTML = `<div class="empty">Chargement des mods…</div>`; $("#modCount").textContent = ""; return; }
   const q = $("#search").value.trim().toLowerCase();
-  const list = q ? mods.filter(m => (m.name + " " + m.file + " " + m.description).toLowerCase().includes(q)) : mods;
-  $("#modCount").textContent = q ? `${list.length} sur ${mods.length}` : `${mods.length} mods`;
+  let list = q ? mods.filter(m => (m.name + " " + m.file + " " + m.description).toLowerCase().includes(q)) : mods;
+  if (modFilter === "opt") list = list.filter(m => m.clientOnly);
+  if (modFilter === "off") list = list.filter(m => !m.enabled);
+  const offCount = mods.filter(m => !m.enabled).length;
+  $("#modCount").textContent = (q || modFilter !== "all" ? `${list.length} sur ${mods.length}` : `${mods.length} mods`) + (offCount ? ` · ${offCount} désactivé${offCount > 1 ? "s" : ""}` : "");
   if (!mods.length) {
     grid.innerHTML = state.updating
       ? `<div class="empty">Téléchargement du pack en cours… les mods apparaîtront ici.</div>`
       : `<div class="empty">Ce pack n'a aucun mod (dossier mods vide ou introuvable).</div>`;
     return;
   }
-  if (!list.length) { grid.innerHTML = `<div class="empty">Aucun mod ne correspond à « ${esc(q)} ».</div>`; return; }
-  grid.innerHTML = list.map(m => `
-    <div class="mod" title="${esc(m.description || m.file)}">
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty">${modFilter === "off" && !q ? "Aucun mod désactivé." : q ? `Aucun mod ne correspond à « ${esc(q)} ».` : "Aucun mod."}</div>`;
+    return;
+  }
+  const busy = !!state.busyPack;
+  grid.innerHTML = list.map(m => {
+    let sw = "";
+    if (m.clientOnly) {
+      const locked = (m.requiredBy || []).length > 0;
+      const tip = locked ? `Utilisé par ${m.requiredBy.join(", ")}` : (m.enabled ? "Désactiver ce mod (côté client uniquement)" : "Réactiver ce mod");
+      sw = `<button class="sw ${m.enabled ? "on" : ""}" role="switch" aria-checked="${m.enabled}" data-mod="${esc(m.id)}"
+              title="${esc(tip)}" aria-label="${esc(m.name)}" ${locked || busy ? "disabled" : ""}></button>`;
+    }
+    return `
+    <div class="mod ${m.enabled ? "" : "off"}" title="${esc(m.description || m.file)}">
       ${m.icon ? `<img alt="" src="${m.icon}">` : `<div class="ph">${esc((m.name[0] || "?").toUpperCase())}</div>`}
-      <div><b>${esc(m.name)}</b><span>${esc(m.version || m.file)}</span></div>
-    </div>`).join("");
+      <div class="meta"><b>${esc(m.name)}</b><span>${esc(m.version || m.file)}</span></div>
+      ${sw}
+    </div>`;
+  }).join("");
+  grid.querySelectorAll(".sw").forEach(b => b.onclick = async ev => {
+    ev.stopPropagation();
+    const m = mods.find(x => x.id === b.dataset.mod);
+    if (!m) return;
+    b.disabled = true;
+    try {
+      await setModEnabled(p.id, m.id, !m.enabled);
+      modsCache[p.id] = await listMods(p.id) || [];
+      setStatus(`${m.name} ${m.enabled ? "désactivé" : "réactivé"} : pris en compte au prochain lancement.`);
+      setProgress(-1);
+    } catch (e) { setStatus(String(e), true); }
+    renderMods();
+  });
 }
+let modFilter = "all";
+document.querySelectorAll("#modFilter button").forEach(b => b.onclick = () => {
+  modFilter = b.dataset.f;
+  document.querySelectorAll("#modFilter button").forEach(x => x.classList.toggle("on", x === b));
+  renderMods();
+});
 
 function renderMode() {
   const p = curPack(), m = $("#mode");

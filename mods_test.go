@@ -111,3 +111,21 @@ func TestConfigDefaults(t *testing.T) {
 		t.Fatal("not created")
 	}
 }
+
+func TestRequiredBy(t *testing.T) {
+	mods := []ModInfo{
+		{File: "sodium.jar", ID: "sodium", ClientOnly: true, Provides: []string{"sodium"}},
+		{File: "iris.jar", ID: "iris", ClientOnly: true, Requires: []string{"sodium"}, Provides: []string{"iris"}},
+		{File: "freecam.jar", ID: "freecam", ClientOnly: true, Provides: []string{"freecam", "cloth-config"}},
+		{File: "other.jar", ID: "other", Requires: []string{"cloth-config"}, Provides: []string{"other", "cloth-config"}},
+	}
+	if by := requiredBy(mods, mods[0], map[string]bool{}); len(by) != 1 || by[0] != "" && by[0] != mods[1].Name {
+		t.Fatalf("sodium should be needed by iris: %v", by)
+	}
+	if by := requiredBy(mods, mods[0], map[string]bool{"iris": true}); len(by) != 0 {
+		t.Fatalf("iris off → sodium free: %v", by)
+	}
+	if by := requiredBy(mods, mods[2], map[string]bool{}); len(by) != 0 {
+		t.Fatalf("bundled lib also provided elsewhere must not lock freecam: %v", by)
+	}
+}

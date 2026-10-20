@@ -104,7 +104,7 @@ func (a *App) GetState() StateView {
 	return s
 }
 
-func (a *App) ListMods(packID string) []ModInfo {
+func (a *App) modInfos(packID string) []ModInfo {
 	p := findPack(packID)
 	if p == nil {
 		return nil
@@ -120,6 +120,92 @@ func (a *App) ListMods(packID string) []ModInfo {
 	a.mods[packID] = m
 	a.mu.Unlock()
 	return m
+}
+
+type ModView struct {
+	ModInfo
+	Enabled    bool     `json:"enabled"`
+	RequiredBy []string `json:"requiredBy"` // enabled mods that need this one (toggle locked)
+}
+
+func (a *App) disabledSet(packID string) map[string]bool {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	out := map[string]bool{}
+	for _, id := range a.settings.Disabled[packID] {
+		out[id] = true
+	}
+	return out
+}
+
+func (a *App) ListMods(packID string) []ModView {
+	mods := a.modInfos(packID)
+	off := a.disabledSet(packID)
+	out := make([]ModView, 0, len(mods))
+	for _, m := range mods {
+		v := ModView{ModInfo: m, Enabled: !(m.ClientOnly && off[m.ID])}
+		if m.ClientOnly {
+			v.RequiredBy = requiredBy(mods, m, off)
+			if len(v.RequiredBy) > 0 {
+				v.Enabled = true // can't be off while something needs it
+			}
+		}
+		out = append(out, v)
+	}
+	return out
+}
+
+// SetModEnabled is the toggle on a client-only mod.
+func (a *App) SetModEnabled(packID, modID string, enabled bool) error {
+	mods := a.modInfos(packID)
+	var target *ModInfo
+	for i := range mods {
+		if mods[i].ID == modID {
+			target = &mods[i]
+		}
+	}
+	if target == nil || !target.ClientOnly {
+		return errors.New("ce mod est nécessaire pour jouer sur le serveur, il ne peut pas être désactivé")
+	}
+	if !enabled {
+		if by := requiredBy(mods, *target, a.disabledSet(packID)); len(by) > 0 {
+			return fmt.Errorf("%s est utilisé par %s : désactive d'abord ce mod", target.Name, strings.Join(by, ", "))
+		}
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if a.settings.Disabled == nil {
+		a.settings.Disabled = map[string][]string{}
+	}
+	var list []string
+	for _, id := range a.settings.Disabled[packID] {
+		if id != modID {
+			list = append(list, id)
+		}
+	}
+	if !enabled {
+		list = append(list, modID)
+	}
+	if len(list) == 0 {
+		delete(a.settings.Disabled, packID)
+	} else {
+		a.settings.Disabled[packID] = list
+	}
+	return saveSettings(a.settings)
+}
+
+// skippedFiles lists the jars of the player's disabled client-only mods
+// (never one that another enabled mod still needs).
+func (a *App) skippedFiles(p *Pack) map[string]bool {
+	mods := readModInfos(p)
+	off := a.disabledSet(p.ID)
+	skip := map[string]bool{}
+	for _, m := range mods {
+		if m.ClientOnly && off[m.ID] && len(requiredBy(mods, m, off)) == 0 {
+			skip[m.File] = true
+		}
+	}
+	return skip
 }
 
 func (a *App) SelectPack(packID string) {
@@ -346,7 +432,10 @@ func (a *App) run(p *Pack, acc *Account, ram int, server string) error {
 	if err != nil {
 		return err
 	}
-	if err := syncMods(p, status); err != nil {
+	a.mu.Lock()
+	delete(a.mods, p.ID) // the update may have changed the mods
+	a.mu.Unlock()
+	if err := syncMods(p, a.skippedFiles(p), status); err != nil {
 		return fmt.Errorf("copie des mods impossible : %w", err)
 	}
 	if err := fetchPackDownloads(p, status, progress); err != nil {
