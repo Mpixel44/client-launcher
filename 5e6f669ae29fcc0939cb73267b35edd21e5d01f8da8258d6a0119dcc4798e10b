@@ -170,6 +170,13 @@
           "path": "mods/prickle-fabric-1.21.1-21.1.11.jar",
           "sha1": "6d6032880be3b6469c5615fd2ea160bf5eb93ac2",
           "size": 87229
+        },
+        {
+          "name": "Server Auctions",
+          "url": "https://cdn.modrinth.com/data/PUpAxnaw/versions/89ut35aZ/server-auctions-1.4.3%2B1.21.1-fabric.jar",
+          "path": "mods/server-auctions-1.4.3+1.21.1-fabric.jar",
+          "sha1": "9be114816d0ad4af78a8ce319c57b64a1d1d2964",
+          "size": 151190
         }
       ],
       "resourcePacks": [
