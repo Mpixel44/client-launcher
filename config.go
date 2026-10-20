@@ -65,6 +65,7 @@ type RemoteFile struct {
 type Config struct {
 	Name         string `json:"name"`
 	DefaultRamMB int    `json:"defaultRamMB"`
+	DataName     string `json:"dataName,omitempty"` // name of the data folder (kept when renaming the launcher)
 	ClientID     string `json:"microsoftClientId"`
 	UpdateURL    string `json:"updateUrl,omitempty"` // folder on your server holding manifest.json
 	UpdateKey    string `json:"updateKey,omitempty"` // public key that signs manifest.json
@@ -178,14 +179,30 @@ func (c *Config) normalize() error {
 }
 
 // defaultLauncherJSON is the configuration built into the exe, so a player can
-// receive Launcher.exe alone: everything else is downloaded by the updater.
+// receive the .exe alone: everything else is downloaded by the updater.
 //
 //go:embed res/default-launcher.json
 var defaultLauncherJSON []byte
 
 // standalone is true when the exe runs without a launcher.json next to it.
-// Pack files then live in <data>/fichiers instead of next to the exe.
+// Pack files then live in <game folder>/fichiers instead of next to the exe.
 var standalone bool
+
+// gameRoot is where Minecraft, Java, the packs and the game folders are
+// installed. The player picks it on first launch ("" = not chosen yet).
+// dataDir only keeps the launcher's own small files (settings, account…).
+var gameRoot string
+
+// storageName keeps the data folder stable even if the launcher is renamed.
+func storageName(c Config) string {
+	if c.DataName != "" {
+		return c.DataName
+	}
+	if c.Name != "" {
+		return c.Name
+	}
+	return "Client"
+}
 
 func dataDirFor(name string) string {
 	if d := os.Getenv("LAUNCHER_DATA"); d != "" {
@@ -197,6 +214,39 @@ func dataDirFor(name string) string {
 	}
 	return filepath.Join(base, "."+slug(name)+"-launcher")
 }
+
+func locationFile() string { return filepath.Join(dataDir, "location.json") }
+
+// resolveGameRoot reads the chosen install folder. Installs made before this
+// choice existed keep using the data folder, without asking.
+func resolveGameRoot() {
+	gameRoot = ""
+	var loc struct {
+		Path string `json:"path"`
+	}
+	if b, err := os.ReadFile(locationFile()); err == nil && json.Unmarshal(b, &loc) == nil && loc.Path != "" {
+		gameRoot = loc.Path
+		return
+	}
+	if os.Getenv("LAUNCHER_DATA") != "" && os.Getenv("LAUNCHER_ASK") == "" { // tests
+		gameRoot = dataDir
+		return
+	}
+	for _, d := range []string{"versions", "instances", "fichiers", "game"} {
+		if _, err := os.Stat(filepath.Join(dataDir, d)); err == nil {
+			gameRoot = dataDir
+			saveGameRoot()
+			return
+		}
+	}
+}
+
+func saveGameRoot() {
+	b, _ := json.MarshalIndent(map[string]string{"path": gameRoot}, "", "  ")
+	_ = os.WriteFile(locationFile(), b, 0o644)
+}
+
+func installed() bool { return gameRoot != "" }
 
 func loadConfig() error {
 	exe, err := os.Executable()
@@ -212,17 +262,23 @@ func loadConfig() error {
 	path := filepath.Join(baseDir, "launcher.json")
 	_, statErr := os.Stat(path)
 	standalone = statErr != nil
-	var ownerName string
 	if standalone {
 		var emb Config
 		if err := json.Unmarshal(defaultLauncherJSON, &emb); err != nil {
 			return err
 		}
-		if emb.Name == "" {
-			emb.Name = "Client"
+		dataDir = dataDirFor(storageName(emb))
+		if err := os.MkdirAll(dataDir, 0o755); err != nil {
+			return err
 		}
-		ownerName = emb.Name
-		baseDir = filepath.Join(dataDirFor(ownerName), "fichiers")
+		resolveGameRoot()
+		if !installed() {
+			// first launch: run on the built-in config until the player picks a folder
+			cfg = emb
+			baseDir = ""
+			return cfg.normalize()
+		}
+		baseDir = filepath.Join(gameRoot, "fichiers")
 		path = filepath.Join(baseDir, "launcher.json")
 		if _, err := os.Stat(path); err != nil {
 			if err := os.MkdirAll(baseDir, 0o755); err != nil {
@@ -245,21 +301,72 @@ func loadConfig() error {
 	if err := cfg.normalize(); err != nil {
 		return err
 	}
-	if ownerName == "" {
-		ownerName = cfg.Name
-	}
-	dataDir = dataDirFor(ownerName)
-	if err := os.MkdirAll(dataDir, 0o755); err != nil {
-		return err
+	if !standalone {
+		dataDir = dataDirFor(storageName(cfg))
+		if err := os.MkdirAll(dataDir, 0o755); err != nil {
+			return err
+		}
+		resolveGameRoot()
+		if !installed() { // the owner's copy: no question, use the data folder
+			gameRoot = dataDir
+			saveGameRoot()
+		}
 	}
 	migrateLegacyGameDir()
 	return nil
 }
 
+// suggestedInstallDir is what the first-launch window proposes.
+func suggestedInstallDir() string { return dataDir }
+
+// finalInstallDir: picking a folder that already holds other things installs
+// into a "Nexus" sub-folder instead of spreading files into it.
+func finalInstallDir(p string) string {
+	p = filepath.Clean(strings.TrimSpace(p))
+	if p == filepath.Clean(dataDir) {
+		return p
+	}
+	entries, err := os.ReadDir(p)
+	if err != nil || len(entries) == 0 {
+		return p
+	}
+	for _, d := range []string{"versions", "instances", "fichiers"} {
+		if _, err := os.Stat(filepath.Join(p, d)); err == nil {
+			return p // already an install
+		}
+	}
+	name := cfg.Name
+	if name == "" {
+		name = "Nexus"
+	}
+	return filepath.Join(p, name)
+}
+
+// setInstallDir is called once, from the first-launch window.
+func setInstallDir(p string) error {
+	if !filepath.IsAbs(p) {
+		return fmt.Errorf("choisis un dossier complet (par exemple D:\\Jeux\\Nexus)")
+	}
+	if err := os.MkdirAll(p, 0o755); err != nil {
+		return fmt.Errorf("impossible de créer %s : %w", p, err)
+	}
+	probe := filepath.Join(p, ".test-ecriture")
+	if err := os.WriteFile(probe, []byte("ok"), 0o644); err != nil {
+		return fmt.Errorf("impossible d'écrire dans %s (dossier protégé ?) : %w", p, err)
+	}
+	_ = os.Remove(probe)
+	gameRoot = p
+	saveGameRoot()
+	return loadConfig()
+}
+
 // Before multi-pack support the single game folder was <data>/game:
 // hand it to the first pack so worlds and settings are kept.
 func migrateLegacyGameDir() {
-	old := filepath.Join(dataDir, "game")
+	if !installed() {
+		return
+	}
+	old := filepath.Join(gameRoot, "game")
 	if _, err := os.Stat(old); err != nil || len(cfg.Packs) == 0 {
 		return
 	}
@@ -318,13 +425,13 @@ func saveSettings(s Settings) error {
 	return os.WriteFile(filepath.Join(dataDir, "settings.json"), b, 0o644)
 }
 
-// Folder layout inside dataDir (shared by every pack, except instances/).
-func pVersions() string           { return filepath.Join(dataDir, "versions") }
-func pLibraries() string          { return filepath.Join(dataDir, "libraries") }
-func pAssets() string             { return filepath.Join(dataDir, "assets") }
-func pRuntime() string            { return filepath.Join(dataDir, "runtime") }
+// Folder layout inside the install folder (shared by every pack, except instances/).
+func pVersions() string           { return filepath.Join(gameRoot, "versions") }
+func pLibraries() string          { return filepath.Join(gameRoot, "libraries") }
+func pAssets() string             { return filepath.Join(gameRoot, "assets") }
+func pRuntime() string            { return filepath.Join(gameRoot, "runtime") }
 func pWebview() string            { return filepath.Join(dataDir, "webview") }
-func pInstance(p *Pack) string    { return filepath.Join(dataDir, "instances", p.ID) }
+func pInstance(p *Pack) string    { return filepath.Join(gameRoot, "instances", p.ID) }
 func pPackSource(p *Pack) string  { return filepath.Join(baseDir, filepath.FromSlash(p.Folder)) }
 func pPackModsSrc(p *Pack) string { return filepath.Join(pPackSource(p), "mods") }
 

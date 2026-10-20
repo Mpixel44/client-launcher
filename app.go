@@ -67,11 +67,15 @@ type StateView struct {
 	RamMB    int          `json:"ramMB"`
 	MaxRamMB int          `json:"maxRamMB"`
 	BusyPack string       `json:"busyPack"`
-	Updating bool         `json:"updating"`
-	Update   UpdateView   `json:"update"`
-	LastPack string       `json:"lastPack"`
-	Games    []GameView   `json:"games"`
-	Packs    []PackView   `json:"packs"`
+	// first launch: the player must pick where to install the game
+	NeedsInstall bool       `json:"needsInstall"`
+	InstallDir   string     `json:"installDir"`
+	SuggestedDir string     `json:"suggestedDir"`
+	Updating     bool       `json:"updating"`
+	Update       UpdateView `json:"update"`
+	LastPack     string     `json:"lastPack"`
+	Games        []GameView `json:"games"`
+	Packs        []PackView `json:"packs"`
 }
 
 func (a *App) GetState() StateView {
@@ -81,6 +85,7 @@ func (a *App) GetState() StateView {
 		Name: cfg.Name, Version: launcherVersion,
 		RamMB: a.settings.RamMB, MaxRamMB: totalRAMMB(),
 		BusyPack: a.busyPack, LastPack: a.settings.LastPack, Updating: a.updating,
+		NeedsInstall: !installed(), InstallDir: gameRoot, SuggestedDir: suggestedInstallDir(),
 	}
 	us := loadUpdateState()
 	s.Update = UpdateView{Enabled: updatesEnabled(), Admin: isAdmin(), Version: us.Version,
@@ -330,6 +335,9 @@ func (a *App) Logout() {
 // ---------- play ----------
 
 func (a *App) Play(packID string) error {
+	if !installed() {
+		return errors.New("choisis d'abord où installer le jeu")
+	}
 	p := findPack(packID)
 	if p == nil {
 		return errors.New("pack introuvable")
@@ -491,7 +499,39 @@ func (a *App) OpenPackFolder(packID string) {
 	}
 }
 
-func (a *App) OpenDataFolder() { openFolder(dataDir) }
+func (a *App) OpenDataFolder() {
+	if installed() {
+		openFolder(gameRoot)
+	}
+}
+
+// ChooseFolder opens the Windows folder picker; the answer comes back as a
+// "folderPicked" event (the picker must not block the window).
+func (a *App) ChooseFolder(initial string) {
+	go func() {
+		if p := pickFolder(initial); p != "" {
+			a.emit("folderPicked", finalInstallDir(p))
+		}
+	}()
+}
+
+// SetInstallDir is the "Installer ici" button of the first-launch window.
+func (a *App) SetInstallDir(p string) error {
+	if installed() {
+		return errors.New("le dossier d'installation est déjà choisi")
+	}
+	if err := setInstallDir(p); err != nil {
+		return err
+	}
+	a.mu.Lock()
+	a.mods = map[string][]ModInfo{}
+	a.settings = loadSettings()
+	a.mu.Unlock()
+	if updatesEnabled() && !isAdmin() {
+		go a.doUpdate(true)
+	}
+	return nil
+}
 
 func (a *App) OpenURL(u string) {
 	if strings.HasPrefix(u, "https://") {
@@ -533,6 +573,9 @@ func (a *App) CheckUpdates() error {
 // StartupUpdate runs once, shortly after the window opens.
 func (a *App) StartupUpdate() {
 	go cleanupOldExe()
+	if !installed() {
+		return // runs after the player picks the install folder
+	}
 	if updatesEnabled() && !isAdmin() {
 		time.Sleep(600 * time.Millisecond)
 		a.doUpdate(true)
@@ -540,6 +583,9 @@ func (a *App) StartupUpdate() {
 }
 
 func (a *App) doUpdate(allowSelf bool) {
+	if !installed() {
+		return
+	}
 	a.mu.Lock()
 	if a.busyPack != "" || a.updating {
 		a.mu.Unlock()

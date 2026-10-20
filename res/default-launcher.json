@@ -1,5 +1,6 @@
 {
-  "name": "Client",
+  "name": "Nexus",
+  "dataName": "Client",
   "defaultRamMB": 8192,
   "microsoftClientId": "",
   "updateUrl": "https://raw.githubusercontent.com/Mpixel44/client-launcher/mises-a-jour/",
@@ -22,7 +23,7 @@
   "packs": [
     {
       "id": "client",
-      "name": "Client",
+      "name": "Nexus",
       "description": "Le pack principal : aventure, donjons, nouveaux biomes et optimisation.",
       "minecraft": "1.21.1",
       "loader": "fabric",

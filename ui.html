@@ -411,12 +411,28 @@
         </div>
         <div class="card">
           <h3>Launcher</h3>
-          <div class="row-i"><div class="k"><b>Données du launcher</b><span>Minecraft, Java, et un dossier par pack</span></div><button class="sbtn" id="openData">Ouvrir</button></div>
+          <div class="row-i"><div class="k"><b>Dossier d'installation</b><span id="instDir">Minecraft, Java, et un dossier par pack</span></div><button class="sbtn" id="openData">Ouvrir</button></div>
           <div class="row-i"><div class="k"><b id="aboutName"></b><span>Version du launcher</span></div><div class="v" id="aboutVer"></div></div>
         </div>
       </div>
     </div>
   </main>
+</div>
+
+<!-- first launch: where to install -->
+<div class="veil" id="installVeil">
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+    <img src="{{LOGO}}" alt="" style="width:64px;height:64px;display:block;margin:-6px 0 10px;filter:drop-shadow(0 0 12px rgba(116,253,8,.35))">
+    <h3 id="installTitle">Où installer {{TITLE}} ?</h3>
+    <p>Minecraft, Java, les mods, tes mondes et tes réglages iront dans ce dossier (environ 2 Go). Tu ne pourras pas le changer ensuite sans réinstaller.</p>
+    <div class="row" style="margin-bottom:6px">
+      <input class="search" id="installPath" style="margin:0;width:auto;flex:1;font-family:var(--mono);font-size:12px" spellcheck="false">
+      <button class="btn" id="installBrowse" style="flex:none">Parcourir…</button>
+    </div>
+    <p class="hint" style="margin:0 0 16px">Astuce : choisis un disque avec de la place (par exemple D:\Jeux). Si le dossier choisi contient déjà autre chose, un sous-dossier « {{TITLE}} » sera créé.</p>
+    <div class="row"><button class="btn primary" id="installGo">Installer ici</button></div>
+    <div class="err-box" id="installErr"></div>
+  </div>
 </div>
 
 <!-- login -->
@@ -667,6 +683,7 @@ function renderSettings() {
   r.value = state.ramMB;
   updateRamLabel();
   renderUpdateRows();
+  $("#instDir").textContent = state.installDir || "pas encore installé";
   $("#aboutName").textContent = state.name;
   $("#aboutVer").textContent = "v" + state.version;
 }
@@ -770,6 +787,25 @@ async function refreshState(reload) {
   renderAll();
   if (packId && !modsCache[packId]) { modsCache[packId] = await listMods(packId) || []; renderMods(); }
 }
+// ---- first-launch install folder ----
+function openInstall() {
+  $("#installPath").value = state.suggestedDir || "";
+  $("#installErr").textContent = "";
+  $("#installVeil").classList.add("on");
+}
+$("#installBrowse").onclick = () => chooseFolder($("#installPath").value);
+$("#installGo").onclick = async () => {
+  const path = $("#installPath").value.trim();
+  if (!path) { $("#installErr").textContent = "Choisis un dossier."; return; }
+  $("#installGo").disabled = true;
+  try {
+    await setInstallDir(path);
+    $("#installVeil").classList.remove("on");
+    await refreshState(true);
+    if (!state.account) openLogin();
+  } catch (e) { $("#installErr").textContent = String(e); }
+  finally { $("#installGo").disabled = false; }
+};
 $("#crashClose").onclick = () => $("#crashVeil").classList.remove("on");
 $("#crashFolder").onclick = () => openGameFolder(crashPack || packId);
 $("#gvPlay").onclick = async () => {
@@ -822,6 +858,7 @@ window.__onEvent = (ev, d) => {
     case "loginDone": state.account = d; closeLogin(); renderAll(); setStatus("Connecté en tant que " + d.name + "."); break;
     case "loginError": openLogin(); $("#loginErr").textContent = d; break;
     case "loggedOut": state.account = null; renderAll(); break;
+    case "folderPicked": $("#installPath").value = d; $("#installErr").textContent = ""; break;
     case "updating": state.updating = true; renderPlay(); if (view === "settings") renderUpdateRows(); else if (curPack()) renderMods(); break;
     case "restarting": setStatus("Nouvelle version du launcher installée, redémarrage…"); setProgress(1); break;
     case "updated": {
@@ -845,7 +882,8 @@ document.addEventListener("contextmenu", e => { if (!e.target.closest("input, pr
   gameId = firstMC ? firstMC.id : state.games[0].id;
   packId = state.packs.some(p => p.id === state.lastPack) ? state.lastPack : (state.packs[0] || {}).id;
   renderAll();
-  if (!state.account) openLogin();
+  if (state.needsInstall) openInstall();
+  else if (!state.account) openLogin();
   if (packId) { modsCache[packId] = await listMods(packId) || []; renderMods(); }
 })();
 </script>

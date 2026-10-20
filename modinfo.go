@@ -30,6 +30,9 @@ type ModInfo struct {
 var ctrlChars = regexp.MustCompile(`[\x00-\x1f]`)
 
 func readModInfos(p *Pack) []ModInfo {
+	if baseDir == "" {
+		return nil
+	}
 	dir := pPackModsSrc(p)
 	entries, err := os.ReadDir(dir)
 	if err != nil {

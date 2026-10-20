@@ -234,3 +234,44 @@ func TestStandaloneExeBootstrap(t *testing.T) {
 		t.Fatal("mod not downloaded into the data folder")
 	}
 }
+
+func TestFirstLaunchAsksInstallDir(t *testing.T) {
+	data := t.TempDir()
+	os.Unsetenv("LAUNCHER_DIR")
+	t.Setenv("LAUNCHER_DATA", data)
+	t.Setenv("LAUNCHER_ASK", "1")
+	if err := loadConfig(); err != nil {
+		t.Fatal(err)
+	}
+	if installed() || baseDir != "" || len(cfg.Packs) == 0 {
+		t.Fatalf("should wait for a folder: installed=%v baseDir=%q", installed(), baseDir)
+	}
+	if countMods(&cfg.Packs[0]) != 0 || readModInfos(&cfg.Packs[0]) != nil {
+		t.Fatal("no mods before install")
+	}
+	busy := t.TempDir()
+	write(t, filepath.Join(busy, "autre.txt"), "x")
+	if got := finalInstallDir(busy); got != filepath.Join(busy, cfg.Name) {
+		t.Fatalf("non-empty folder should get a sub-folder: %s", got)
+	}
+	target := filepath.Join(t.TempDir(), "Jeux", "Nexus")
+	if err := setInstallDir(target); err != nil {
+		t.Fatal(err)
+	}
+	if !installed() || gameRoot != target || baseDir != filepath.Join(target, "fichiers") {
+		t.Fatalf("gameRoot=%s baseDir=%s", gameRoot, baseDir)
+	}
+	if !strings.HasPrefix(pVersions(), target) || !strings.HasPrefix(pInstance(&cfg.Packs[0]), target) {
+		t.Fatal("game files must go to the chosen folder")
+	}
+	if read(t, filepath.Join(target, "fichiers", "launcher.json")) == "<absent>" {
+		t.Fatal("config not written")
+	}
+	// next start: remembered, no question
+	if err := loadConfig(); err != nil || gameRoot != target {
+		t.Fatalf("not remembered: %s %v", gameRoot, err)
+	}
+	if read(t, filepath.Join(data, "location.json")) == "<absent>" {
+		t.Fatal("location not saved in data folder")
+	}
+}

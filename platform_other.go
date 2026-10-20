@@ -40,3 +40,5 @@ func totalRAMMB() int {
 }
 
 func systemProxy() string { return "" }
+
+func pickFolder(initial string) string { return "" }

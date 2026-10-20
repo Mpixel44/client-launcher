@@ -10,6 +10,9 @@ import (
 
 // countMods returns the number of .jar files shipped next to the launcher.
 func countMods(p *Pack) int {
+	if baseDir == "" {
+		return 0
+	}
 	entries, err := os.ReadDir(pPackModsSrc(p))
 	if err != nil {
 		return 0

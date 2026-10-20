@@ -1,6 +1,6 @@
-# Client Launcher
+# Nexus
 
-Launcher Minecraft (Fabric) multi-packs avec mises à jour automatiques.
+Launcher Minecraft (Fabric) multi-packs « Nexus » avec mises à jour automatiques.
 
 - Connexion Microsoft, téléchargement automatique de Minecraft, Fabric et Java.
 - Plusieurs packs, chacun avec son dossier de jeu.
@@ -18,5 +18,5 @@ Seul le détenteur de la clé secrète peut produire une signature acceptée par
 ## Compiler
 
 ```
-GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-H windowsgui -s -w" -o Launcher.exe .
+GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-H windowsgui -s -w" -o Nexus.exe .
 ```

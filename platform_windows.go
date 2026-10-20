@@ -122,3 +122,23 @@ func systemProxy() string {
 	}
 	return fallback
 }
+
+// pickFolder shows the standard Windows folder picker (through PowerShell, which
+// ships with Windows) and returns the chosen folder, or "" if cancelled.
+func pickFolder(initial string) string {
+	script := `[Console]::OutputEncoding=[Text.Encoding]::UTF8
+Add-Type -AssemblyName System.Windows.Forms
+$owner = New-Object System.Windows.Forms.Form -Property @{TopMost=$true}
+$d = New-Object System.Windows.Forms.FolderBrowserDialog
+$d.Description = 'Où installer le jeu ?'
+$d.ShowNewFolderButton = $true
+$d.SelectedPath = '` + strings.ReplaceAll(initial, "'", "''") + `'
+if ($d.ShowDialog($owner) -eq 'OK') { $d.SelectedPath }`
+	cmd := exec.Command("powershell", "-NoProfile", "-STA", "-ExecutionPolicy", "Bypass", "-Command", script)
+	hideConsole(cmd)
+	out, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(strings.TrimPrefix(string(out), "\ufeff"))
+}

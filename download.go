@@ -18,7 +18,7 @@ import (
 
 var httpClient = &http.Client{Timeout: 5 * time.Minute}
 
-const userAgent = "ClientLauncher/1.0"
+const userAgent = "NexusLauncher/2.0"
 
 type dlTask struct {
 	URL    string
