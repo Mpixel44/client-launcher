@@ -22,8 +22,6 @@ func bindings(a *App) map[string]any {
 		"setSolo":        a.SetSolo,
 		"setModEnabled":  a.SetModEnabled,
 		"listExtras":     a.ListExtras,
-		"listWorlds":     a.ListWorlds,
-		"openWorlds":     a.OpenWorldsFolder,
 		"setExtraOn":     a.SetExtraEnabled,
 		"chooseFolder":   a.ChooseFolder,
 		"setInstallDir":  a.SetInstallDir,

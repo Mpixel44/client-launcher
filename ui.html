@@ -345,7 +345,6 @@
       <button class="tab active" data-tab="mods" role="tab">Mods <span class="n" id="nMods"></span></button>
       <button class="tab" data-tab="tex" role="tab">Packs de textures <span class="n" id="nTex"></span></button>
       <button class="tab" data-tab="sh" role="tab">Shaders <span class="n" id="nSh"></span></button>
-      <button class="tab" data-tab="worlds" role="tab">Mondes <span class="n" id="nWorlds"></span></button>
       <span class="tabs-sp"></span>
       <button class="tab tab-set" data-tab="pset" role="tab">Réglages du pack</button>
     </div>
@@ -361,7 +360,6 @@
           <input class="search" id="search" type="search" placeholder="Rechercher un mod…" autocomplete="off">
         </div>
         <div class="scroll"><div class="grid" id="grid"></div></div>
-        <div class="list-foot" id="worldsFoot" hidden><button class="sbtn" id="openWorldsBtn">Ouvrir le dossier des mondes</button></div>
       </div>
       <div id="tabPset" class="scroll" hidden>
         <div class="card">
@@ -597,15 +595,14 @@ function renderPackView() {
   renderPlay();
 }
 
-const extrasCache = {}, worldsCache = {};
+const extrasCache = {};
 let modFilter = "opt";
-const LIST_TABS = ["mods", "tex", "sh", "worlds"];
+const LIST_TABS = ["mods", "tex", "sh"];
 
 async function loadPackData(id, force) {
   const jobs = [];
   if (force || !modsCache[id]) jobs.push(listMods(id).then(r => { modsCache[id] = r || []; }));
   if (force || !extrasCache[id]) jobs.push(listExtras(id).then(r => { extrasCache[id] = r || []; }));
-  if (force || !worldsCache[id]) jobs.push(listWorlds(id).then(r => { worldsCache[id] = r || []; }));
   await Promise.all(jobs);
   if (packId === id) { renderCounts(); renderMods(); }
 }
@@ -613,7 +610,7 @@ async function loadPackData(id, force) {
 function renderCounts() {
   const p = curPack();
   if (!p) return;
-  const ex = extrasCache[p.id] || [], w = worldsCache[p.id];
+  const ex = extrasCache[p.id] || [];
   const set = (sel, n, tabName) => {
     $(sel).textContent = n == null ? "" : `(${n})`;
     document.querySelector(`.tab[data-tab=${tabName}]`).classList.toggle("empty-cat", n === 0);
@@ -621,7 +618,6 @@ function renderCounts() {
   set("#nMods", p.loader === "Fabric" ? p.modCount : 0, "mods");
   set("#nTex", ex.filter(x => x.kind === "texture").length, "tex");
   set("#nSh", ex.filter(x => x.kind === "shader").length, "sh");
-  set("#nWorlds", w ? w.length : null, "worlds");
 }
 
 // items of the current tab, in a common shape
@@ -638,37 +634,26 @@ function tabItems(p) {
       optional: true, enabled: x.enabled, lockedBy: [], search: x.name + " " + x.path, tag: tab === "tex" && x.active ? "ACTIF" : "",
     }));
   }
-  if (tab === "worlds") {
-    const w = worldsCache[p.id];
-    return w && w.map(x => ({
-      key: x.folder, kind: "world", name: x.name, icon: x.icon, desc: x.folder,
-      sub: x.lastPlayed ? "Joué le " + fmtDate(x.lastPlayed) : "", optional: false, enabled: true, lockedBy: [], search: x.name,
-    }));
-  }
   return [];
 }
 
 function renderMods() {
   const p = curPack(), grid = $("#grid");
   if (!p || !LIST_TABS.includes(tab)) return;
-  const isWorlds = tab === "worlds";
-  $("#modFilter").hidden = isWorlds;
-  $("#worldsFoot").hidden = !isWorlds;
-  $("#search").placeholder = { mods: "Rechercher un mod…", tex: "Rechercher un pack de textures…", sh: "Rechercher un shader…", worlds: "Rechercher un monde…" }[tab];
+  $("#search").placeholder = { mods: "Rechercher un mod…", tex: "Rechercher un pack de textures…", sh: "Rechercher un shader…" }[tab];
   const items = tabItems(p);
   if (!items) { grid.innerHTML = `<div class="empty">Chargement…</div>`; $("#modCount").textContent = ""; return; }
   const q = $("#search").value.trim().toLowerCase();
   let list = q ? items.filter(m => m.search.toLowerCase().includes(q)) : items;
-  if (!isWorlds && modFilter === "opt") list = list.filter(m => m.optional);
-  if (!isWorlds && modFilter === "off") list = list.filter(m => !m.enabled);
+  if (modFilter === "opt") list = list.filter(m => m.optional);
+  if (modFilter === "off") list = list.filter(m => !m.enabled);
   const offCount = items.filter(m => !m.enabled).length;
-  const noun = { mods: "mod", tex: "pack", sh: "shader", worlds: "monde" }[tab] + (items.length > 1 ? "s" : "");
+  const noun = { mods: "mod", tex: "pack", sh: "shader" }[tab] + (items.length > 1 ? "s" : "");
   $("#modCount").textContent = (list.length === items.length ? `${items.length} ${noun}` : `${list.length} sur ${items.length}`) +
     (offCount ? ` · ${offCount} désactivé${offCount > 1 ? "s" : ""}` : "");
   if (!items.length) {
     grid.innerHTML = `<div class="empty">${
       tab === "mods" ? (state.updating ? "Téléchargement du pack en cours… les mods apparaîtront ici." : "Ce pack n'a aucun mod.")
-      : isWorlds ? "Aucun monde pour l'instant : ils apparaîtront ici après ta première partie en solo."
       : tab === "tex" ? "Aucun pack de textures dans ce pack." : "Aucun shader dans ce pack."}</div>`;
     return;
   }
@@ -711,7 +696,7 @@ document.querySelectorAll("#modFilter button").forEach(b => b.onclick = () => {
   document.querySelectorAll("#modFilter button").forEach(x => x.classList.toggle("on", x === b));
   renderMods();
 });
-$("#openWorldsBtn").onclick = () => openWorlds(packId);
+
 
 function renderMode() {
   const p = curPack(), m = $("#mode");
@@ -851,7 +836,6 @@ $("#settingsBtn").onclick = () => { view = "settings"; renderAll(); };
 $("#accountBtn").onclick = () => { if (state.account) { view = "settings"; renderAll(); } else openLogin(); };
 document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
   tab = t.dataset.tab; $("#search").value = ""; renderPackView(); renderMods();
-  if (tab === "worlds" && packId) loadPackData(packId, true); // worlds change while playing
 });
 $("#search").oninput = renderMods;
 $("#psGame").onclick = () => openGameFolder(packId);
@@ -928,7 +912,7 @@ window.__onEvent = (ev, d) => {
       state.busyPack = "";
       if (!$("#status").classList.contains("err")) { setStatus("Prêt."); setProgress(-1); }
       if (view === "game" && curGame().type === "minecraft") { renderPacks(); renderPlay(); }
-      if (packId) loadPackData(packId, true); // new worlds, freshly downloaded pack icons
+      if (packId) loadPackData(packId, true); // freshly downloaded pack icons
       break;
     case "error": setStatus(d, true); setProgress(-1); break;
     case "crash":

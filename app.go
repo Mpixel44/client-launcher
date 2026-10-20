@@ -2,14 +2,12 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -809,51 +807,4 @@ func (a *App) SetExtraEnabled(packID, path string, enabled bool) error {
 		a.settings.DisabledExtras[packID] = list
 	}
 	return saveSettings(a.settings)
-}
-
-// ---------- worlds ----------
-
-type WorldView struct {
-	Name       string `json:"name"`
-	Folder     string `json:"folder"`
-	LastPlayed string `json:"lastPlayed"` // RFC3339
-	Icon       string `json:"icon"`
-}
-
-func (a *App) ListWorlds(packID string) []WorldView {
-	p := findPack(packID)
-	if p == nil || !installed() {
-		return nil
-	}
-	dir := filepath.Join(pInstance(p), "saves")
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil
-	}
-	var out []WorldView
-	for _, e := range entries {
-		if !e.IsDir() {
-			continue
-		}
-		wd := filepath.Join(dir, e.Name())
-		st, err := os.Stat(filepath.Join(wd, "level.dat"))
-		if err != nil {
-			continue
-		}
-		w := WorldView{Name: e.Name(), Folder: e.Name(), LastPlayed: st.ModTime().Format(time.RFC3339)}
-		if b, err := os.ReadFile(filepath.Join(wd, "icon.png")); err == nil && len(b) < 200<<10 {
-			w.Icon = "data:image/png;base64," + base64.StdEncoding.EncodeToString(b)
-		}
-		out = append(out, w)
-	}
-	sort.Slice(out, func(i, j int) bool { return out[i].LastPlayed > out[j].LastPlayed })
-	return out
-}
-
-func (a *App) OpenWorldsFolder(packID string) {
-	if p := findPack(packID); p != nil && installed() {
-		d := filepath.Join(pInstance(p), "saves")
-		_ = os.MkdirAll(d, 0o755)
-		openFolder(d)
-	}
 }
