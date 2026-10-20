@@ -1,6 +1,6 @@
 {
-  "version": 15,
-  "published": "2026-10-20T16:10:56+02:00",
+  "version": 16,
+  "published": "2026-10-20T16:38:37+02:00",
   "launcher": {
     "path": "Nexus.exe",
     "sha256": "323d4496a11b09621ea1f899cbe4efe5e00796a9c51b3e44a9c5c95cf955dd38",
@@ -296,11 +296,6 @@
       "path": "mods/iris-fabric-1.8.14-beta.1+mc1.21.1.jar",
       "sha256": "0ceb694040b4628bf3fa02286cfe5f0db833195669ab07f8caa4001359763eff",
       "size": 2791343
-    },
-    {
-      "path": "mods/jakeseconomy-1.3.0+1.21.1.jar",
-      "sha256": "483fc968fd79df83315c03f2af677db03e8673ff04f6239c5f42fcb61bbf5596",
-      "size": 266708
     },
     {
       "path": "mods/jamlib-fabric-1.3.6+1.21.1.jar",
