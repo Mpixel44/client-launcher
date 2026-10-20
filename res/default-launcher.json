@@ -135,6 +135,41 @@
           "path": "mods/ly-agility-enchantment-v1.0.0-1.21-1.21.1.jar",
           "sha1": "20a7546319d876b3ddb2cdd7ed85be593748fa27",
           "size": 46870
+        },
+        {
+          "name": "Just Hammers",
+          "url": "https://cdn.modrinth.com/data/edU0NbZZ/versions/EGzHAWo0/just-hammers-fabric-21.1.4.jar",
+          "path": "mods/just-hammers-fabric-21.1.4.jar",
+          "sha1": "052621a90647b5c4eb97130e48156672e60d2aff",
+          "size": 108688
+        },
+        {
+          "name": "Beautiful Enchanted Books",
+          "url": "https://cdn.modrinth.com/data/pcqEicMM/versions/kcGH3Tr5/BEB-Fabric-1.21-6.0.0.jar",
+          "path": "mods/BEB-Fabric-1.21-6.0.0.jar",
+          "sha1": "d5616f7d97117dba4ec92dd1790ddf62ef2f5301",
+          "size": 1772088
+        },
+        {
+          "name": "Enchantment Descriptions",
+          "url": "https://cdn.modrinth.com/data/UVtY3ZAC/versions/NBccO5gj/enchdesc-fabric-1.21.1-21.1.11.jar",
+          "path": "mods/enchdesc-fabric-1.21.1-21.1.11.jar",
+          "sha1": "48c19ec3c55819bb2df4ceef34a7c5caa5e6e699",
+          "size": 84229
+        },
+        {
+          "name": "Bookshelf",
+          "url": "https://cdn.modrinth.com/data/uy4Cnpcm/versions/kpkjWpa5/bookshelf-fabric-1.21.1-21.1.81.jar",
+          "path": "mods/bookshelf-fabric-1.21.1-21.1.81.jar",
+          "sha1": "c6cfd92af694102ee52ff1069f05804c75c0da7b",
+          "size": 330355
+        },
+        {
+          "name": "Prickle",
+          "url": "https://cdn.modrinth.com/data/aaRl8GiW/versions/Ef7P6Rb7/prickle-fabric-1.21.1-21.1.11.jar",
+          "path": "mods/prickle-fabric-1.21.1-21.1.11.jar",
+          "sha1": "6d6032880be3b6469c5615fd2ea160bf5eb93ac2",
+          "size": 87229
         }
       ],
       "resourcePacks": [
