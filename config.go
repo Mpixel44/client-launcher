@@ -37,6 +37,17 @@ type Pack struct {
 	Folder       string `json:"folder"`                 // relative to the launcher, "" = launcher folder itself
 	Server       string `json:"server,omitempty"`       // optional "ip:port" to join directly
 	Icon         string `json:"icon,omitempty"`         // optional .png inside the pack folder
+	// Files each player downloads straight from their official host (e.g. Modrinth),
+	// for content whose licence forbids re-hosting it (shaders…).
+	Downloads []RemoteFile `json:"downloads,omitempty"`
+}
+
+type RemoteFile struct {
+	Name string `json:"name,omitempty"` // shown in the launcher
+	URL  string `json:"url"`
+	Path string `json:"path"` // inside the game folder, e.g. "shaderpacks/x.zip"
+	SHA1 string `json:"sha1"`
+	Size int64  `json:"size,omitempty"`
 }
 
 // Config is read from launcher.json, next to the executable.

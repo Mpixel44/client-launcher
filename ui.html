@@ -324,6 +324,7 @@
           <div class="row-i"><div class="k"><b>Minecraft</b></div><div class="v" id="psMc"></div></div>
           <div class="row-i"><div class="k"><b>Chargeur de mods</b></div><div class="v" id="psLoader"></div></div>
           <div class="row-i"><div class="k"><b>Serveur</b><span>Rejoint automatiquement en cliquant sur JOUER</span></div><div class="v" id="psServer"></div></div>
+          <div class="row-i" id="psShadersRow"><div class="k"><b>Shaders</b><span>Téléchargés depuis Modrinth. À activer en jeu : Options › Graphismes › Packs de shaders.</span></div><div class="v" id="psShaders" style="text-align:right"></div></div>
         </div>
         <div class="card">
           <h3>Dossiers</h3>
@@ -518,11 +519,14 @@ function renderPackView() {
   $("#chips").innerHTML =
     `<span class="chip">Minecraft <b>${esc(p.minecraft)}</b></span><span class="chip"><b>${esc(p.loader)}</b></span>` +
     (p.loader === "Fabric" ? `<span class="chip"><b>${p.modCount}</b> mods</span>` : "") +
-    (p.server ? `<span class="chip">Serveur <b>${esc(p.server)}</b></span>` : "");
+    (p.server ? `<span class="chip">Serveur <b>${esc(p.server)}</b></span>` : "") +
+    ((p.extras || []).length ? `<span class="chip" title="${esc(p.extras.join(", "))}"><b>${p.extras.length}</b> shader${p.extras.length > 1 ? "s" : ""}</span>` : "");
   $("#modN").textContent = p.loader === "Fabric" ? p.modCount : "";
   $("#psMc").textContent = p.minecraft;
   $("#psLoader").textContent = p.loader;
   $("#psServer").textContent = p.server || "aucun";
+  $("#psShadersRow").hidden = !(p.extras || []).length;
+  $("#psShaders").innerHTML = (p.extras || []).map(esc).join("<br>");
   document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
   $("#tabMods").hidden = tab !== "mods";
   $("#tabPset").hidden = tab !== "pset";

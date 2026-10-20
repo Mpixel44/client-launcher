@@ -47,15 +47,16 @@ type GameView struct {
 }
 
 type PackView struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Minecraft   string `json:"minecraft"`
-	Loader      string `json:"loader"`
-	ModCount    int    `json:"modCount"`
-	Server      string `json:"server"`
-	Solo        bool   `json:"solo"`
-	Icon        string `json:"icon"`
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Minecraft   string   `json:"minecraft"`
+	Loader      string   `json:"loader"`
+	ModCount    int      `json:"modCount"`
+	Server      string   `json:"server"`
+	Solo        bool     `json:"solo"`
+	Icon        string   `json:"icon"`
+	Extras      []string `json:"extras"` // names of external downloads (shaders…)
 }
 
 type StateView struct {
@@ -96,7 +97,7 @@ func (a *App) GetState() StateView {
 			loader = "Vanilla"
 		}
 		s.Packs = append(s.Packs, PackView{ID: p.ID, Name: p.Name, Description: p.Description,
-			Minecraft: p.Minecraft, Loader: loader, ModCount: countMods(p), Server: p.Server, Icon: packIcon(p),
+			Minecraft: p.Minecraft, Loader: loader, ModCount: countMods(p), Server: p.Server, Icon: packIcon(p), Extras: extraNames(p),
 			Solo: a.settings.Solo[p.ID]})
 	}
 	return s
@@ -347,6 +348,9 @@ func (a *App) run(p *Pack, acc *Account, ram int, server string) error {
 	if err := syncMods(p, status); err != nil {
 		return fmt.Errorf("copie des mods impossible : %w", err)
 	}
+	if err := fetchPackDownloads(p, status, progress); err != nil {
+		return fmt.Errorf("téléchargement des shaders impossible : %w", err)
+	}
 
 	if server != "" {
 		status("Lancement de " + p.Name + " et connexion à " + server + "…")
@@ -555,4 +559,16 @@ func (a *App) Publish() error {
 func (a *App) OpenPublishFolder() {
 	_ = os.MkdirAll(pOnline(), 0o755)
 	openFolder(pOnline())
+}
+
+func extraNames(p *Pack) []string {
+	var out []string
+	for _, d := range p.Downloads {
+		n := d.Name
+		if n == "" {
+			n = filepath.Base(d.Path)
+		}
+		out = append(out, n)
+	}
+	return out
 }

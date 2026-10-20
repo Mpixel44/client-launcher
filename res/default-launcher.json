@@ -28,7 +28,23 @@
       "loader": "fabric",
       "fabricLoader": "",
       "folder": "",
-      "server": "minecraft.nexusdescartes.com"
+      "server": "minecraft.nexusdescartes.com",
+      "downloads": [
+        {
+          "name": "Complementary Reimagined r5.9.3",
+          "url": "https://cdn.modrinth.com/data/HVnmMxH1/versions/Bqen1mJX/ComplementaryReimagined_r5.9.3.zip",
+          "path": "shaderpacks/ComplementaryReimagined_r5.9.3.zip",
+          "sha1": "838139b54cddb56b2e83cd260d8efd960ac536d6",
+          "size": 553397
+        },
+        {
+          "name": "Complementary Unbound r5.9.3",
+          "url": "https://cdn.modrinth.com/data/R6NEzAwj/versions/B1kyfoUZ/ComplementaryUnbound_r5.9.3.zip",
+          "path": "shaderpacks/ComplementaryUnbound_r5.9.3.zip",
+          "sha1": "2ee08300e1d6f039e63eae8484dddf57b3aaaf67",
+          "size": 553400
+        }
+      ]
     }
   ]
 }

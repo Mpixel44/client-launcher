@@ -116,3 +116,24 @@ func copyIfMissing(src, dst string) error {
 		return copyFile(p, d)
 	})
 }
+
+// fetchPackDownloads gets the pack's external files (shaders…) from their official
+// host into the game folder. Files already present and intact are skipped.
+func fetchPackDownloads(p *Pack, status func(string), progress Progress) error {
+	var tasks []dlTask
+	for _, d := range p.Downloads {
+		if !strings.HasPrefix(d.URL, "https://") || d.Path == "" || d.SHA1 == "" {
+			continue
+		}
+		rel := filepath.FromSlash(d.Path)
+		if filepath.IsAbs(rel) || strings.Contains(d.Path, "..") {
+			continue
+		}
+		tasks = append(tasks, dlTask{URL: d.URL, Path: filepath.Join(pInstance(p), rel), SHA1: d.SHA1, Size: d.Size})
+	}
+	if len(tasks) == 0 {
+		return nil
+	}
+	status("Vérification des shaders et fichiers externes…")
+	return downloadAll("Shaders", tasks, true, 4, progress)
+}
