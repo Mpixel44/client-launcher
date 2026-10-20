@@ -355,6 +355,9 @@ func (a *App) run(p *Pack, acc *Account, ram int, server string) error {
 	if err := applyResourcePacks(p); err != nil {
 		return fmt.Errorf("activation des packs de textures impossible : %w", err)
 	}
+	if err := applyConfigDefaults(p); err != nil {
+		return fmt.Errorf("réglages par défaut des mods impossibles : %w", err)
+	}
 
 	if server != "" {
 		status("Lancement de " + p.Name + " et connexion à " + server + "…")

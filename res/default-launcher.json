@@ -135,6 +135,16 @@
         "continuity:default",
         "fabric",
         "vanilla"
+      ],
+      "configDefaults": [
+        {
+          "file": "config/replaymod.json",
+          "set": {
+            "recording": {
+              "autoStartRecording": false
+            }
+          }
+        }
       ]
     }
   ]

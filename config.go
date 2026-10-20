@@ -43,6 +43,14 @@ type Pack struct {
 	// Resource packs to enable, top = highest priority (same order as the in-game list).
 	// Applied once per change, so players can still customise afterwards.
 	ResourcePacks []string `json:"resourcePacks,omitempty"`
+	// Default values written into mods' JSON config files, applied once per change
+	// (players can change them afterwards), e.g. ReplayMod auto-recording off.
+	ConfigDefaults []ConfigDefault `json:"configDefaults,omitempty"`
+}
+
+type ConfigDefault struct {
+	File string         `json:"file"` // inside the game folder, e.g. "config/replaymod.json"
+	Set  map[string]any `json:"set"`  // merged into the file (nested objects are merged too)
 }
 
 type RemoteFile struct {

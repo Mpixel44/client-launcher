@@ -196,3 +196,58 @@ func applyResourcePacks(p *Pack) error {
 	}
 	return os.WriteFile(marker, []byte(sum), 0o644)
 }
+
+// applyConfigDefaults merges the pack's default settings into mods' JSON config
+// files. Like resource packs, it runs again only when the published defaults change.
+func applyConfigDefaults(p *Pack) error {
+	if len(p.ConfigDefaults) == 0 {
+		return nil
+	}
+	raw, _ := json.Marshal(p.ConfigDefaults)
+	sum := sha256hex(raw)
+	inst := pInstance(p)
+	marker := filepath.Join(inst, ".launcher-config-defaults")
+	if b, err := os.ReadFile(marker); err == nil && strings.TrimSpace(string(b)) == sum {
+		return nil
+	}
+	for _, cd := range p.ConfigDefaults {
+		if cd.File == "" || strings.Contains(cd.File, "..") || filepath.IsAbs(filepath.FromSlash(cd.File)) {
+			continue
+		}
+		path := filepath.Join(inst, filepath.FromSlash(cd.File))
+		cur := map[string]any{}
+		if b, err := os.ReadFile(path); err == nil && len(strings.TrimSpace(string(b))) > 0 {
+			if err := json.Unmarshal(b, &cur); err != nil {
+				continue // not a JSON object: leave the player's file alone
+			}
+		}
+		mergeJSON(cur, cd.Set)
+		out, err := json.MarshalIndent(cur, "", "  ")
+		if err != nil {
+			return err
+		}
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			return err
+		}
+		if err := os.WriteFile(path, out, 0o644); err != nil {
+			return err
+		}
+	}
+	return os.WriteFile(marker, []byte(sum), 0o644)
+}
+
+func mergeJSON(dst, src map[string]any) {
+	for k, v := range src {
+		if sv, ok := v.(map[string]any); ok {
+			if dv, ok := dst[k].(map[string]any); ok {
+				mergeJSON(dv, sv)
+				continue
+			}
+			cp := map[string]any{}
+			mergeJSON(cp, sv)
+			dst[k] = cp
+			continue
+		}
+		dst[k] = v
+	}
+}

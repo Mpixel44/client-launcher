@@ -77,3 +77,37 @@ func TestApplyResourcePacks(t *testing.T) {
 		t.Fatal("new options.txt wrong")
 	}
 }
+
+func TestConfigDefaults(t *testing.T) {
+	dataDir = t.TempDir()
+	p := &Pack{ID: "client", ConfigDefaults: []ConfigDefault{{File: "config/replaymod.json",
+		Set: map[string]any{"recording": map[string]any{"autoStartRecording": false}}}}}
+	cfgFile := filepath.Join(pInstance(p), "config", "replaymod.json")
+	// existing player file with other settings
+	write(t, cfgFile, `{"recording":{"autoStartRecording":true,"indicator":false},"core":{"notifications":false}}`)
+	if err := applyConfigDefaults(p); err != nil {
+		t.Fatal(err)
+	}
+	got := read(t, cfgFile)
+	for _, want := range []string{`"autoStartRecording": false`, `"indicator": false`, `"notifications": false`} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("missing %s in %s", want, got)
+		}
+	}
+	// player turns it back on → kept
+	write(t, cfgFile, `{"recording":{"autoStartRecording":true}}`)
+	if err := applyConfigDefaults(p); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(read(t, cfgFile), "true") {
+		t.Fatal("player choice overwritten")
+	}
+	// fresh player: file created
+	p2 := &Pack{ID: "neuf", ConfigDefaults: p.ConfigDefaults}
+	if err := applyConfigDefaults(p2); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(read(t, filepath.Join(pInstance(p2), "config", "replaymod.json")), `"autoStartRecording": false`) {
+		t.Fatal("not created")
+	}
+}
