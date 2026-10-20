@@ -1,10 +1,10 @@
 {
-  "version": 8,
-  "published": "2026-10-20T02:29:26+02:00",
+  "version": 9,
+  "published": "2026-10-20T11:50:02+02:00",
   "launcher": {
     "path": "Nexus.exe",
-    "sha256": "65c43250a5f0995d33bd0cdc956d3e389e4251d0e88ff3807ae48baa5c3b4cb1",
-    "size": 7586816
+    "sha256": "624f347247a2fe900716286ea4378b051256e35ffcfa8e6927412e56f71fcee5",
+    "size": 7609856
   },
   "config": {
     "path": "launcher.json",
