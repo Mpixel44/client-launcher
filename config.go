@@ -85,6 +85,8 @@ type Settings struct {
 	Solo     map[string]bool `json:"solo"` // packs set to "Solo" instead of joining their server
 	// client-only mods the player turned off, per pack (mod ids)
 	Disabled map[string][]string `json:"disabled,omitempty"`
+	// resource packs / shaders the player turned off, per pack (download paths)
+	DisabledExtras map[string][]string `json:"disabledExtras,omitempty"`
 }
 
 var (

@@ -126,7 +126,7 @@ func copyIfMissing(src, dst string) error {
 
 // fetchPackDownloads gets the pack's external files (shaders…) from their official
 // host into the game folder. Files already present and intact are skipped.
-func fetchPackDownloads(p *Pack, status func(string), progress Progress) error {
+func fetchPackDownloads(p *Pack, off map[string]bool, status func(string), progress Progress) error {
 	var tasks []dlTask
 	for _, d := range p.Downloads {
 		if !strings.HasPrefix(d.URL, "https://") || d.Path == "" || d.SHA1 == "" {
@@ -134,6 +134,10 @@ func fetchPackDownloads(p *Pack, status func(string), progress Progress) error {
 		}
 		rel := filepath.FromSlash(d.Path)
 		if filepath.IsAbs(rel) || strings.Contains(d.Path, "..") {
+			continue
+		}
+		if off[d.Path] { // turned off by the player: remove it from the game folder
+			_ = os.Remove(filepath.Join(pInstance(p), rel))
 			continue
 		}
 		tasks = append(tasks, dlTask{URL: d.URL, Path: filepath.Join(pInstance(p), rel), SHA1: d.SHA1, Size: d.Size})
@@ -148,13 +152,21 @@ func fetchPackDownloads(p *Pack, status func(string), progress Progress) error {
 // applyResourcePacks writes the pack's resource pack order into options.txt.
 // It only does so when the published list changed since the last time, so a
 // player who later rearranges their packs keeps their own choice.
-func applyResourcePacks(p *Pack) error {
+func applyResourcePacks(p *Pack, off map[string]bool) error {
 	if len(p.ResourcePacks) == 0 {
 		return nil
 	}
+	offPacks := map[string]bool{} // "file/<name>" entries of turned-off downloads
+	for path := range off {
+		if strings.HasPrefix(path, "resourcepacks/") {
+			offPacks["file/"+strings.TrimPrefix(path, "resourcepacks/")] = true
+		}
+	}
 	order := make([]string, 0, len(p.ResourcePacks)) // options.txt: lowest priority first
 	for i := len(p.ResourcePacks) - 1; i >= 0; i-- {
-		order = append(order, p.ResourcePacks[i])
+		if !offPacks[p.ResourcePacks[i]] {
+			order = append(order, p.ResourcePacks[i])
+		}
 	}
 	var buf strings.Builder
 	enc := json.NewEncoder(&buf)

@@ -213,3 +213,20 @@ func requiredBy(mods []ModInfo, target ModInfo, disabled map[string]bool) []stri
 	}
 	return out
 }
+
+// zipPackIcon returns the pack.png of a downloaded resource pack, if any.
+func zipPackIcon(zipPath string) string {
+	z, err := zip.OpenReader(zipPath)
+	if err != nil {
+		return ""
+	}
+	defer z.Close()
+	for _, f := range z.File {
+		if f.Name == "pack.png" && f.UncompressedSize64 < 300<<10 {
+			if data, err := readZip(f, 300<<10); err == nil {
+				return "data:image/png;base64," + base64.StdEncoding.EncodeToString(data)
+			}
+		}
+	}
+	return ""
+}

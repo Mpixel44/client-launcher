@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -446,10 +448,11 @@ func (a *App) run(p *Pack, acc *Account, ram int, server string) error {
 	if err := syncMods(p, a.skippedFiles(p), status); err != nil {
 		return fmt.Errorf("copie des mods impossible : %w", err)
 	}
-	if err := fetchPackDownloads(p, status, progress); err != nil {
+	offExtras := a.disabledExtras(p.ID)
+	if err := fetchPackDownloads(p, offExtras, status, progress); err != nil {
 		return fmt.Errorf("téléchargement des shaders / packs de textures impossible : %w", err)
 	}
-	if err := applyResourcePacks(p); err != nil {
+	if err := applyResourcePacks(p, offExtras); err != nil {
 		return fmt.Errorf("activation des packs de textures impossible : %w", err)
 	}
 	if err := applyConfigDefaults(p); err != nil {
@@ -716,4 +719,141 @@ func extraNames(p *Pack, prefix string) []string {
 		out = append(out, n)
 	}
 	return out
+}
+
+// ---------- resource packs & shaders (per-player toggles) ----------
+
+type ExtraView struct {
+	Name    string `json:"name"`
+	Path    string `json:"path"`
+	Kind    string `json:"kind"` // "texture" or "shader"
+	Enabled bool   `json:"enabled"`
+	Icon    string `json:"icon"`
+	Active  bool   `json:"active"` // part of the pack's resource pack order
+}
+
+func (a *App) disabledExtras(packID string) map[string]bool {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	out := map[string]bool{}
+	for _, p := range a.settings.DisabledExtras[packID] {
+		out[p] = true
+	}
+	return out
+}
+
+func (a *App) ListExtras(packID string) []ExtraView {
+	p := findPack(packID)
+	if p == nil {
+		return nil
+	}
+	off := a.disabledExtras(packID)
+	inOrder := map[string]bool{}
+	for _, rp := range p.ResourcePacks {
+		inOrder[rp] = true
+	}
+	var out []ExtraView
+	for _, d := range p.Downloads {
+		kind := ""
+		switch {
+		case strings.HasPrefix(d.Path, "resourcepacks/"):
+			kind = "texture"
+		case strings.HasPrefix(d.Path, "shaderpacks/"):
+			kind = "shader"
+		default:
+			continue
+		}
+		name := d.Name
+		if name == "" {
+			name = strings.TrimSuffix(filepath.Base(d.Path), ".zip")
+		}
+		v := ExtraView{Name: name, Path: d.Path, Kind: kind, Enabled: !off[d.Path],
+			Active: inOrder["file/"+strings.TrimPrefix(d.Path, "resourcepacks/")]}
+		if kind == "texture" && installed() {
+			v.Icon = zipPackIcon(filepath.Join(pInstance(p), filepath.FromSlash(d.Path)))
+		}
+		out = append(out, v)
+	}
+	return out
+}
+
+func (a *App) SetExtraEnabled(packID, path string, enabled bool) error {
+	p := findPack(packID)
+	if p == nil {
+		return errors.New("pack introuvable")
+	}
+	known := false
+	for _, d := range p.Downloads {
+		known = known || d.Path == path
+	}
+	if !known {
+		return errors.New("fichier inconnu")
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if a.settings.DisabledExtras == nil {
+		a.settings.DisabledExtras = map[string][]string{}
+	}
+	var list []string
+	for _, x := range a.settings.DisabledExtras[packID] {
+		if x != path {
+			list = append(list, x)
+		}
+	}
+	if !enabled {
+		list = append(list, path)
+	}
+	if len(list) == 0 {
+		delete(a.settings.DisabledExtras, packID)
+	} else {
+		a.settings.DisabledExtras[packID] = list
+	}
+	return saveSettings(a.settings)
+}
+
+// ---------- worlds ----------
+
+type WorldView struct {
+	Name       string `json:"name"`
+	Folder     string `json:"folder"`
+	LastPlayed string `json:"lastPlayed"` // RFC3339
+	Icon       string `json:"icon"`
+}
+
+func (a *App) ListWorlds(packID string) []WorldView {
+	p := findPack(packID)
+	if p == nil || !installed() {
+		return nil
+	}
+	dir := filepath.Join(pInstance(p), "saves")
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil
+	}
+	var out []WorldView
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		wd := filepath.Join(dir, e.Name())
+		st, err := os.Stat(filepath.Join(wd, "level.dat"))
+		if err != nil {
+			continue
+		}
+		w := WorldView{Name: e.Name(), Folder: e.Name(), LastPlayed: st.ModTime().Format(time.RFC3339)}
+		if b, err := os.ReadFile(filepath.Join(wd, "icon.png")); err == nil && len(b) < 200<<10 {
+			w.Icon = "data:image/png;base64," + base64.StdEncoding.EncodeToString(b)
+		}
+		out = append(out, w)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].LastPlayed > out[j].LastPlayed })
+	return out
+}
+
+func (a *App) OpenWorldsFolder(packID string) {
+	if p := findPack(packID); p != nil && installed() {
+		d := filepath.Join(pInstance(p), "saves")
+		_ = os.MkdirAll(d, 0o755)
+		openFolder(d)
+	}
 }

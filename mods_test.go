@@ -25,7 +25,7 @@ func TestPackDownloads(t *testing.T) {
 		{URL: srv.URL + "/evil", Path: "../../evil.zip", SHA1: "x"},
 		{URL: "http://insecure/x", Path: "shaderpacks/x.zip", SHA1: "x"},
 	}}
-	if err := fetchPackDownloads(p, func(string) {}, func(string, int, int) {}); err != nil {
+	if err := fetchPackDownloads(p, nil, func(string) {}, func(string, int, int) {}); err != nil {
 		t.Fatal(err)
 	}
 	b, err := os.ReadFile(filepath.Join(pInstance(p), "shaderpacks", "c.zip"))
@@ -44,7 +44,7 @@ func TestApplyResourcePacks(t *testing.T) {
 	p := &Pack{ID: "client", ResourcePacks: []string{"betterbeds:fancyconnectedbeds", "file/Nature X - 11.1.zip", "file/Better+Lanterns+v1.2(mc-1.21).zip", "fabric", "vanilla"}}
 	opt := filepath.Join(pInstance(p), "options.txt")
 	write(t, opt, "version:3955\nresourcePacks:[\"fabric\"]\nlang:fr_fr\n")
-	if err := applyResourcePacks(p); err != nil {
+	if err := applyResourcePacks(p, nil); err != nil {
 		t.Fatal(err)
 	}
 	got := read(t, opt)
@@ -54,7 +54,7 @@ func TestApplyResourcePacks(t *testing.T) {
 	}
 	// player reorders → launcher keeps it on next launch
 	write(t, opt, "version:3955\nresourcePacks:[\"vanilla\"]\nlang:fr_fr\n")
-	if err := applyResourcePacks(p); err != nil {
+	if err := applyResourcePacks(p, nil); err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(read(t, opt), `resourcePacks:["vanilla"]`) {
@@ -62,7 +62,7 @@ func TestApplyResourcePacks(t *testing.T) {
 	}
 	// new published list → applied again
 	p.ResourcePacks = append([]string{"file/x.zip"}, p.ResourcePacks...)
-	if err := applyResourcePacks(p); err != nil {
+	if err := applyResourcePacks(p, nil); err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(read(t, opt), `"betterbeds:fancyconnectedbeds","file/x.zip"]`) {
@@ -70,7 +70,7 @@ func TestApplyResourcePacks(t *testing.T) {
 	}
 	// fresh game folder: options.txt created
 	p2 := &Pack{ID: "neuf", ResourcePacks: []string{"fabric", "vanilla"}}
-	if err := applyResourcePacks(p2); err != nil {
+	if err := applyResourcePacks(p2, nil); err != nil {
 		t.Fatal(err)
 	}
 	if read(t, filepath.Join(pInstance(p2), "options.txt")) != "resourcePacks:[\"vanilla\",\"fabric\"]\n" {
@@ -127,5 +127,24 @@ func TestRequiredBy(t *testing.T) {
 	}
 	if by := requiredBy(mods, mods[2], map[string]bool{}); len(by) != 0 {
 		t.Fatalf("bundled lib also provided elsewhere must not lock freecam: %v", by)
+	}
+}
+
+func TestDisabledResourcePack(t *testing.T) {
+	dataDir = t.TempDir()
+	gameRoot = dataDir
+	p := &Pack{ID: "client", ResourcePacks: []string{"file/A.zip", "file/B.zip", "vanilla"}}
+	opt := filepath.Join(pInstance(p), "options.txt")
+	if err := applyResourcePacks(p, nil); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(read(t, opt), `["vanilla","file/B.zip","file/A.zip"]`) {
+		t.Fatal(read(t, opt))
+	}
+	if err := applyResourcePacks(p, map[string]bool{"resourcepacks/A.zip": true}); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(read(t, opt), `["vanilla","file/B.zip"]`) {
+		t.Fatal("disabled pack still active: " + read(t, opt))
 	}
 }
