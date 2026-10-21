@@ -145,6 +145,12 @@
               "autoStartRecording": false
             }
           }
+        },
+        {
+          "file": "config/emi.css",
+          "lines": {
+            "center-search-bar": "false"
+          }
         }
       ],
       "optionalMods": [

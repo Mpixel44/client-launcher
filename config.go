@@ -53,7 +53,10 @@ type Pack struct {
 
 type ConfigDefault struct {
 	File string         `json:"file"` // inside the game folder, e.g. "config/replaymod.json"
-	Set  map[string]any `json:"set"`  // merged into the file (nested objects are merged too)
+	Set  map[string]any `json:"set,omitempty"` // merged into the file (nested objects are merged too)
+	// For "key: value;" text files such as EMI's config/emi.css: each existing
+	// line "key: …;" gets the new value. Applied once the mod has created the file.
+	Lines map[string]string `json:"lines,omitempty"`
 }
 
 type RemoteFile struct {

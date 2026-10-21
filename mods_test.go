@@ -148,3 +148,31 @@ func TestDisabledResourcePack(t *testing.T) {
 		t.Fatal("disabled pack still active: " + read(t, opt))
 	}
 }
+
+func TestConfigLines(t *testing.T) {
+	gameRoot = t.TempDir()
+	p := &Pack{ID: "x", ConfigDefaults: []ConfigDefault{{File: "config/emi.css", Lines: map[string]string{"center-search-bar": "false"}}}}
+	path := filepath.Join(pInstance(p), "config", "emi.css")
+	// file not there yet: nothing written, retried later
+	if err := applyConfigDefaults(p); err != nil {
+		t.Fatal(err)
+	}
+	if fileExists(path) || fileExists(filepath.Join(pInstance(p), ".launcher-config-defaults")) {
+		t.Fatal("should wait for the mod to create its file")
+	}
+	os.MkdirAll(filepath.Dir(path), 0o755)
+	os.WriteFile(path, []byte("ui {\r\n\t/**\r\n\t * x\r\n\t */\r\n\tcenter-search-bar: true;\r\n\tother: 1;\r\n}\r\n"), 0o644)
+	if err := applyConfigDefaults(p); err != nil {
+		t.Fatal(err)
+	}
+	b, _ := os.ReadFile(path)
+	if string(b) != "ui {\r\n\t/**\r\n\t * x\r\n\t */\r\n\tcenter-search-bar: false;\r\n\tother: 1;\r\n}\r\n" {
+		t.Fatalf("%q", b)
+	}
+	// player sets it back: left alone
+	os.WriteFile(path, []byte("\tcenter-search-bar: true;\n"), 0o644)
+	applyConfigDefaults(p)
+	if b, _ := os.ReadFile(path); string(b) != "\tcenter-search-bar: true;\n" {
+		t.Fatal("player choice overwritten")
+	}
+}

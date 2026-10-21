@@ -246,11 +246,20 @@ func applyConfigDefaults(p *Pack) error {
 	if b, err := os.ReadFile(marker); err == nil && strings.TrimSpace(string(b)) == sum {
 		return nil
 	}
+	pending := false // a text config the mod has not created yet: try again next launch
 	for _, cd := range p.ConfigDefaults {
 		if cd.File == "" || strings.Contains(cd.File, "..") || filepath.IsAbs(filepath.FromSlash(cd.File)) {
 			continue
 		}
 		path := filepath.Join(inst, filepath.FromSlash(cd.File))
+		if len(cd.Lines) > 0 {
+			ok, err := setConfigLines(path, cd.Lines)
+			if err != nil {
+				return err
+			}
+			pending = pending || !ok
+			continue
+		}
 		cur := map[string]any{}
 		if b, err := os.ReadFile(path); err == nil && len(strings.TrimSpace(string(b))) > 0 {
 			if err := json.Unmarshal(b, &cur); err != nil {
@@ -269,7 +278,42 @@ func applyConfigDefaults(p *Pack) error {
 			return err
 		}
 	}
+	if pending {
+		return nil
+	}
 	return os.WriteFile(marker, []byte(sum), 0o644)
+}
+
+// setConfigLines rewrites "key: value;" lines (EMI's .css config). It returns
+// false when the file does not exist yet.
+func setConfigLines(path string, set map[string]string) (bool, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return false, nil
+	}
+	lines := strings.Split(string(b), "\n")
+	changed := false
+	for i, l := range lines {
+		t := strings.TrimSpace(l)
+		for k, v := range set {
+			if strings.HasPrefix(t, k+":") && strings.HasSuffix(strings.TrimRight(t, "\r"), ";") {
+				indent := l[:len(l)-len(strings.TrimLeft(l, " \t"))]
+				cr := ""
+				if strings.HasSuffix(l, "\r") {
+					cr = "\r"
+				}
+				nl := indent + k + ": " + v + ";" + cr
+				if nl != l {
+					lines[i] = nl
+					changed = true
+				}
+			}
+		}
+	}
+	if !changed {
+		return true, nil
+	}
+	return true, os.WriteFile(path, []byte(strings.Join(lines, "\n")), 0o644)
 }
 
 func mergeJSON(dst, src map[string]any) {
