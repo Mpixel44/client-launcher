@@ -60,6 +60,15 @@ func readModInfos(p *Pack) []ModInfo {
 		}
 		out = append(out, mi)
 	}
+	optional := map[string]bool{}
+	for _, id := range p.OptionalMods {
+		optional[id] = true
+	}
+	for i := range out {
+		if optional[out[i].ID] {
+			out[i].ClientOnly = true
+		}
+	}
 	sort.Slice(out, func(i, j int) bool { return strings.ToLower(out[i].Name) < strings.ToLower(out[j].Name) })
 	return out
 }

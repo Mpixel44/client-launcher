@@ -1,6 +1,7 @@
 package main
 
 import (
+	"archive/zip"
 	"os"
 	"path/filepath"
 	"testing"
@@ -38,4 +39,33 @@ func TestDownloadedModsKept(t *testing.T) {
 	if fileExists(filepath.Join(dst, "v.jar")) {
 		t.Fatal("skipped download mod kept")
 	}
+}
+
+func TestOptionalModsOverride(t *testing.T) {
+	baseDir = t.TempDir()
+	gameRoot = t.TempDir()
+	p := &Pack{ID: "x", Folder: "pk", OptionalMods: []string{"jade"}}
+	dir := filepath.Join(pPackSource(p), "mods")
+	os.MkdirAll(dir, 0o755)
+	writeJar(t, filepath.Join(dir, "jade.jar"), `{"schemaVersion":1,"id":"jade","version":"1","environment":"*"}`)
+	writeJar(t, filepath.Join(dir, "other.jar"), `{"schemaVersion":1,"id":"other","version":"1","environment":"*"}`)
+	got := map[string]bool{}
+	for _, m := range readModInfos(p) {
+		got[m.ID] = m.ClientOnly
+	}
+	if !got["jade"] || got["other"] {
+		t.Fatalf("%v", got)
+	}
+}
+
+func writeJar(t *testing.T, path, modJSON string) {
+	f, err := os.Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	z := zip.NewWriter(f)
+	w, _ := z.Create("fabric.mod.json")
+	w.Write([]byte(modJSON))
+	z.Close()
 }

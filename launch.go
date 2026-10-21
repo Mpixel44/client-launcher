@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-const launcherVersion = "2.4"
+const launcherVersion = "2.5"
 
 // server is the address to join on start ("" = open the title screen, i.e. solo).
 func buildCommand(p *Pack, inst *Installed, acc *Account, ramMB int, server string) (*exec.Cmd, error) {

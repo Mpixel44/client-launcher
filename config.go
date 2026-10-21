@@ -46,6 +46,9 @@ type Pack struct {
 	// Default values written into mods' JSON config files, applied once per change
 	// (players can change them afterwards), e.g. ReplayMod auto-recording off.
 	ConfigDefaults []ConfigDefault `json:"configDefaults,omitempty"`
+	// Mod ids that only matter on the player's side even though their jar says
+	// "environment": "*" (Jade, EMI, animations…): players may turn them off.
+	OptionalMods []string `json:"optionalMods,omitempty"`
 }
 
 type ConfigDefault struct {
