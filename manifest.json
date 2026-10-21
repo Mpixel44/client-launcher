@@ -1,6 +1,6 @@
 {
-  "version": 27,
-  "published": "2026-10-21T21:51:51+02:00",
+  "version": 28,
+  "published": "2026-10-21T22:26:13+02:00",
   "launcher": {
     "path": "Nexus.exe",
     "sha256": "53cd910603f257b5ff97399b9aaf15bec8d89f77f0fc3e143fde6e68d2a1747e",
@@ -491,6 +491,11 @@
       "path": "mods/treeharvester-1.21.1-10.3.jar",
       "sha256": "d6094b05a33e4a28ac0610021588cb8c8b3c0ff648b1b08b876edb5aa03dfbdc",
       "size": 156430
+    },
+    {
+      "path": "mods/trinkets-3.10.0.jar",
+      "sha256": "349fd2aa8930b232050ee5304db55e4ef738b017971afe7c84acd589a95fda2f",
+      "size": 272944
     },
     {
       "path": "mods/veinmining-fabric-5.0.0-beta+1.21.jar",
