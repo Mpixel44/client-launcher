@@ -116,62 +116,6 @@
           "size": 553400
         },
         {
-          "name": "Simple Voice Chat",
-          "url": "https://cdn.modrinth.com/data/9eGKb6K1/versions/6PKCVne5/voicechat-fabric-1.21.1-2.6.24.jar",
-          "path": "mods/voicechat-fabric-1.21.1-2.6.24.jar",
-          "sha1": "5abe8af0b85acc94506caa0a36ccc59836956dd2",
-          "size": 5386871
-        },
-        {
-          "name": "Vein Mining",
-          "url": "https://cdn.modrinth.com/data/bRAPbNyF/versions/5pbJBcoH/veinmining-fabric-5.0.0-beta%2B1.21.jar",
-          "path": "mods/veinmining-fabric-5.0.0-beta+1.21.jar",
-          "sha1": "ae95f354d74bfcb972a8e9b1b81b1d829bc5161a",
-          "size": 606425
-        },
-        {
-          "name": "Agility Enchantment",
-          "url": "https://cdn.modrinth.com/data/vytbdp9G/versions/gTPDkWZt/ly-agility-enchantment-v1.0.0-1.21-1.21.1.jar",
-          "path": "mods/ly-agility-enchantment-v1.0.0-1.21-1.21.1.jar",
-          "sha1": "20a7546319d876b3ddb2cdd7ed85be593748fa27",
-          "size": 46870
-        },
-        {
-          "name": "Just Hammers",
-          "url": "https://cdn.modrinth.com/data/edU0NbZZ/versions/EGzHAWo0/just-hammers-fabric-21.1.4.jar",
-          "path": "mods/just-hammers-fabric-21.1.4.jar",
-          "sha1": "052621a90647b5c4eb97130e48156672e60d2aff",
-          "size": 108688
-        },
-        {
-          "name": "Beautiful Enchanted Books",
-          "url": "https://cdn.modrinth.com/data/pcqEicMM/versions/kcGH3Tr5/BEB-Fabric-1.21-6.0.0.jar",
-          "path": "mods/BEB-Fabric-1.21-6.0.0.jar",
-          "sha1": "d5616f7d97117dba4ec92dd1790ddf62ef2f5301",
-          "size": 1772088
-        },
-        {
-          "name": "Enchantment Descriptions",
-          "url": "https://cdn.modrinth.com/data/UVtY3ZAC/versions/NBccO5gj/enchdesc-fabric-1.21.1-21.1.11.jar",
-          "path": "mods/enchdesc-fabric-1.21.1-21.1.11.jar",
-          "sha1": "48c19ec3c55819bb2df4ceef34a7c5caa5e6e699",
-          "size": 84229
-        },
-        {
-          "name": "Bookshelf",
-          "url": "https://cdn.modrinth.com/data/uy4Cnpcm/versions/kpkjWpa5/bookshelf-fabric-1.21.1-21.1.81.jar",
-          "path": "mods/bookshelf-fabric-1.21.1-21.1.81.jar",
-          "sha1": "c6cfd92af694102ee52ff1069f05804c75c0da7b",
-          "size": 330355
-        },
-        {
-          "name": "Prickle",
-          "url": "https://cdn.modrinth.com/data/aaRl8GiW/versions/Ef7P6Rb7/prickle-fabric-1.21.1-21.1.11.jar",
-          "path": "mods/prickle-fabric-1.21.1-21.1.11.jar",
-          "sha1": "6d6032880be3b6469c5615fd2ea160bf5eb93ac2",
-          "size": 87229
-        },
-        {
           "name": "Sophisticated Backpacks",
           "url": "https://cdn.modrinth.com/data/ouNrBQtq/versions/nHhuPdda/sophisticatedbackpacks-1.21.1-3.23.4.3.106.jar",
           "path": "mods/sophisticatedbackpacks-1.21.1-3.23.4.3.106.jar",
