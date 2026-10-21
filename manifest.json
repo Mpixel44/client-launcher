@@ -1,15 +1,15 @@
 {
-  "version": 25,
-  "published": "2026-10-21T21:12:25+02:00",
+  "version": 26,
+  "published": "2026-10-21T21:15:09+02:00",
   "launcher": {
     "path": "Nexus.exe",
-    "sha256": "8f187f18720e242805c8c877856960f6d2f306e59385e829d13be3c98674e7d0",
-    "size": 7648256
+    "sha256": "53cd910603f257b5ff97399b9aaf15bec8d89f77f0fc3e143fde6e68d2a1747e",
+    "size": 7647744
   },
   "config": {
     "path": "launcher.json",
-    "sha256": "545b1573912c298e901a31572c84bd32c89a98243c4b6ecbc7e97e32597f71fa",
-    "size": 6719
+    "sha256": "bcf9678d0b9b8a99536d8602b163e28c75f6714f6d4576fb4504343fa956e4e2",
+    "size": 6033
   },
   "files": [
     {
@@ -461,6 +461,16 @@
       "path": "mods/sodium-fabric-0.8.13+mc1.21.1.jar",
       "sha256": "3d43c14985a4deb19c654aad3393b454cf57e1ebcbba86c4ae6a98dfc60eca2d",
       "size": 1574609
+    },
+    {
+      "path": "mods/sophisticatedbackpacks-1.21.1-3.23.4.3.106.jar",
+      "sha256": "2c099bfd5dc02ace6e73ffd9259940b0597cd4da7216a53a2c60c6732900d6aa",
+      "size": 988478
+    },
+    {
+      "path": "mods/sophisticatedcore-1.21.1-1.2.9.21.168.jar",
+      "sha256": "3c71a04d5b03cdf9d9fe50e71849fdf11291dd1fab149621e35688ef6e516054",
+      "size": 2996065
     },
     {
       "path": "mods/status-effect-bars-1.0.6.jar",
