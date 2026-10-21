@@ -585,6 +585,7 @@ func (a *App) CheckUpdates() error {
 // StartupUpdate runs once, shortly after the window opens.
 func (a *App) StartupUpdate() {
 	go cleanupOldExe()
+	go a.watchPack()
 	if !installed() {
 		return // runs after the player picks the install folder
 	}
@@ -661,6 +662,48 @@ func (a *App) doUpdate(allowSelf bool) {
 	}
 	a.mu.Unlock()
 	a.emit("updated", map[string]any{"message": msg, "ok": err == nil, "reload": reload})
+}
+
+// watchPack notices when launcher.json or a pack's mods folder changes while the
+// launcher is open (an update, or the owner editing the pack) and refreshes the
+// lists, so nobody has to restart the launcher to see the change.
+func (a *App) watchPack() {
+	stamp := func() string {
+		if baseDir == "" {
+			return ""
+		}
+		var b strings.Builder
+		if st, err := os.Stat(filepath.Join(baseDir, "launcher.json")); err == nil {
+			fmt.Fprintf(&b, "%d/%d;", st.ModTime().UnixNano(), st.Size())
+		}
+		for i := range cfg.Packs {
+			if st, err := os.Stat(pPackModsSrc(&cfg.Packs[i])); err == nil {
+				fmt.Fprintf(&b, "%d;", st.ModTime().UnixNano())
+			}
+		}
+		return b.String()
+	}
+	last := stamp()
+	for {
+		time.Sleep(2 * time.Second)
+		cur := stamp()
+		if cur == last {
+			continue
+		}
+		a.mu.Lock()
+		busy := a.updating || a.busyPack != ""
+		a.mu.Unlock()
+		if busy {
+			continue // try again once the update / launch is over
+		}
+		time.Sleep(500 * time.Millisecond) // let a copy in progress finish
+		last = stamp()
+		a.reloadConfig()
+		a.mu.Lock()
+		a.mods = map[string][]ModInfo{}
+		a.mu.Unlock()
+		a.emit("packChanged", nil)
+	}
 }
 
 // reloadConfig re-reads launcher.json after an update.

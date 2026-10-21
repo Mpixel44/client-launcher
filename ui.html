@@ -928,6 +928,7 @@ window.__onEvent = (ev, d) => {
     case "folderPicked": $("#installPath").value = d; $("#installErr").textContent = ""; break;
     case "updating": state.updating = true; renderPlay(); if (view === "settings") renderUpdateRows(); else if (curPack()) renderMods(); break;
     case "restarting": setStatus("Nouvelle version du launcher installée, redémarrage…"); setProgress(1); break;
+    case "packChanged": refreshState(true); break;
     case "updated": {
       state.updating = false;
       setStatus(d.message, !d.ok); setProgress(-1);
