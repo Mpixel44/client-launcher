@@ -1,6 +1,6 @@
 {
-  "version": 26,
-  "published": "2026-10-21T21:15:09+02:00",
+  "version": 27,
+  "published": "2026-10-21T21:51:51+02:00",
   "launcher": {
     "path": "Nexus.exe",
     "sha256": "53cd910603f257b5ff97399b9aaf15bec8d89f77f0fc3e143fde6e68d2a1747e",
@@ -246,11 +246,6 @@
       "path": "mods/enchdesc-fabric-1.21.1-21.1.11.jar",
       "sha256": "fbcfb017a4c533f7e5b47a20f44d3ce50e381e5316d82a9afe733d77501b73a8",
       "size": 84229
-    },
-    {
-      "path": "mods/enhancedblockentities-0.10.2+1.21.jar",
-      "sha256": "61396ddd5990ae8177165492067c4b02e2ebacbd7be3e97eb37a46aae13c9679",
-      "size": 201157
     },
     {
       "path": "mods/entity_model_features-3.3.12-1.21-fabric.jar",
