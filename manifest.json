@@ -1,15 +1,15 @@
 {
-  "version": 28,
-  "published": "2026-10-21T22:26:13+02:00",
+  "version": 29,
+  "published": "2026-10-21T22:32:38+02:00",
   "launcher": {
     "path": "Nexus.exe",
-    "sha256": "53cd910603f257b5ff97399b9aaf15bec8d89f77f0fc3e143fde6e68d2a1747e",
-    "size": 7647744
+    "sha256": "18c9ee89356c80cb6660713aadaa9a8a60ea7ffa7ecadef5ed6ff26c771d3ac3",
+    "size": 7650304
   },
   "config": {
     "path": "launcher.json",
-    "sha256": "bcf9678d0b9b8a99536d8602b163e28c75f6714f6d4576fb4504343fa956e4e2",
-    "size": 6033
+    "sha256": "2bc79c835e8b0a1e5cdea26213603f6e2618d385f1a1c187cd1ed2ceb1b234dc",
+    "size": 6164
   },
   "files": [
     {
