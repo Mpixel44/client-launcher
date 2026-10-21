@@ -1,21 +1,26 @@
 {
-  "version": 23,
-  "published": "2026-10-21T21:04:58+02:00",
+  "version": 24,
+  "published": "2026-10-21T21:10:43+02:00",
   "launcher": {
     "path": "Nexus.exe",
-    "sha256": "0d220032d52045df466bd2febb01553126bab8147782e1ef9f362c9f7832fcee",
-    "size": 7648256
+    "sha256": "24dcb92136622df210c77bb4382b256d08e99299dc0e93a23a985b0390c17380",
+    "size": 7645696
   },
   "config": {
     "path": "launcher.json",
-    "sha256": "d6650d755173adb43c256b658b1d978682cf0f6b93c8d491e45541cb938069bb",
-    "size": 9270
+    "sha256": "545b1573912c298e901a31572c84bd32c89a98243c4b6ecbc7e97e32597f71fa",
+    "size": 6719
   },
   "files": [
     {
       "path": "mods/AmbientEnvironment-fabric-1.21.1-18.0.0.2.jar",
       "sha256": "7db6fc039872bf0b5743aab810e5b25a2c485bb1afe5adda6f4103ab4028f5be",
       "size": 52331
+    },
+    {
+      "path": "mods/BEB-Fabric-1.21-6.0.0.jar",
+      "sha256": "ef8b8668ee91b3c2bbe6a0110db991b9de951f23a6a2b29ca6986d4a3af5af81",
+      "size": 1772088
     },
     {
       "path": "mods/BadOptimizations-2.4.1-1.21.1.jar",
@@ -158,6 +163,11 @@
       "size": 442117
     },
     {
+      "path": "mods/bookshelf-fabric-1.21.1-21.1.81.jar",
+      "sha256": "df2dd3a3e75f2dbf56baf9bdb6cc0007f9c0efb0f2b2067f047ddf98ea1b49d8",
+      "size": 330355
+    },
+    {
       "path": "mods/cardinal-components-api-6.1.3.jar",
       "sha256": "302a8a4bc2e34cbffaf61af75ab5de47c06bfa159436665870ae61092b0f69a2",
       "size": 229645
@@ -233,6 +243,11 @@
       "size": 40464
     },
     {
+      "path": "mods/enchdesc-fabric-1.21.1-21.1.11.jar",
+      "sha256": "fbcfb017a4c533f7e5b47a20f44d3ce50e381e5316d82a9afe733d77501b73a8",
+      "size": 84229
+    },
+    {
       "path": "mods/enhancedblockentities-0.10.2+1.21.jar",
       "sha256": "61396ddd5990ae8177165492067c4b02e2ebacbd7be3e97eb37a46aae13c9679",
       "size": 201157
@@ -303,6 +318,11 @@
       "size": 187766
     },
     {
+      "path": "mods/just-hammers-fabric-21.1.4.jar",
+      "sha256": "5418fc6d0f8bc780c6c80a3353e5e90cad38750188d258e4f68bc21922b2c604",
+      "size": 108688
+    },
+    {
       "path": "mods/lighty-fabric-3.0.0-beta.8+1.21.1.jar",
       "sha256": "eeb3d58832d60c72dcbd569d6fe667e5b36d1648d24e15d5febf8fb018335ed0",
       "size": 384539
@@ -316,6 +336,11 @@
       "path": "mods/lithostitched-1.8.1-fabric-21.1.jar",
       "sha256": "04980f7e667032fc89c61c4c264565c1564b2808c57da52dcfe427fea1fee1d1",
       "size": 1015426
+    },
+    {
+      "path": "mods/ly-agility-enchantment-v1.0.0-1.21-1.21.1.jar",
+      "sha256": "cdbd9545670cd05b6afaf36aca44fb437932ef78cfc1e6d66bd1de0a7910a97f",
+      "size": 46870
     },
     {
       "path": "mods/malilib-fabric-1.21-0.21.10.jar",
@@ -403,6 +428,11 @@
       "size": 98588
     },
     {
+      "path": "mods/prickle-fabric-1.21.1-21.1.11.jar",
+      "sha256": "d6d639078aecb72770f287d8253e4634114e2536ac9a2ad6ec5f442eb27dd07f",
+      "size": 87229
+    },
+    {
       "path": "mods/puzzleslib-v21.1.64-mc1.21.1+fabric.jar",
       "sha256": "e4dd33e2aaff78cc3fd7b873ccce0fede9d853b7659f1c0ca016c6fe1fd0348d",
       "size": 1507546
@@ -458,9 +488,19 @@
       "size": 156430
     },
     {
+      "path": "mods/veinmining-fabric-5.0.0-beta+1.21.jar",
+      "sha256": "1f96d3001d90d6fde6830f0b878ad497381e42ae3251f8d3d8a823f10962c889",
+      "size": 606425
+    },
+    {
       "path": "mods/visuality-0.7.7+1.21.jar",
       "sha256": "c10fe78103b659259161330be2f6f2123dedf5f2f00cd243225a88d5ffa8c372",
       "size": 79452
+    },
+    {
+      "path": "mods/voicechat-fabric-1.21.1-2.6.24.jar",
+      "sha256": "a6982277bac53420c0e64f8305e133cbadb0f982b30d6ccce9b3e02dfdff991b",
+      "size": 5386871
     },
     {
       "path": "mods/wakes-0.4.1+1.21.1.jar",
