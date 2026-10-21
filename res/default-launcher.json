@@ -114,20 +114,6 @@
           "path": "shaderpacks/ComplementaryUnbound_r5.9.3.zip",
           "sha1": "2ee08300e1d6f039e63eae8484dddf57b3aaaf67",
           "size": 553400
-        },
-        {
-          "name": "Sophisticated Backpacks",
-          "url": "https://cdn.modrinth.com/data/ouNrBQtq/versions/nHhuPdda/sophisticatedbackpacks-1.21.1-3.23.4.3.106.jar",
-          "path": "mods/sophisticatedbackpacks-1.21.1-3.23.4.3.106.jar",
-          "sha1": "7f6af600a58863dfcebe5e3d3ce5e2a4bcabcbd3",
-          "size": 988478
-        },
-        {
-          "name": "Sophisticated Core",
-          "url": "https://cdn.modrinth.com/data/9jxwkYQL/versions/ZLVrtF0Q/sophisticatedcore-1.21.1-1.2.9.21.168.jar",
-          "path": "mods/sophisticatedcore-1.21.1-1.2.9.21.168.jar",
-          "sha1": "43a95dfa338a2a6ba3ea33a5efa0ac040331e50c",
-          "size": 2996065
         }
       ],
       "resourcePacks": [
