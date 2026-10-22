@@ -1,6 +1,6 @@
 {
-  "version": 29,
-  "published": "2026-10-21T22:32:38+02:00",
+  "version": 30,
+  "published": "2026-10-22T17:59:28+02:00",
   "launcher": {
     "path": "Nexus.exe",
     "sha256": "18c9ee89356c80cb6660713aadaa9a8a60ea7ffa7ecadef5ed6ff26c771d3ac3",
@@ -466,6 +466,11 @@
       "path": "mods/sophisticatedcore-1.21.1-1.2.9.21.168.jar",
       "sha256": "3c71a04d5b03cdf9d9fe50e71849fdf11291dd1fab149621e35688ef6e516054",
       "size": 2996065
+    },
+    {
+      "path": "mods/sophisticatedstorage-1.21.1-1.3.7.9.139.jar",
+      "sha256": "0dbaf1ff069c33a8c4738518d983d1cab0cdca6871a6c7b7dc5727c531eca215",
+      "size": 1670672
     },
     {
       "path": "mods/status-effect-bars-1.0.6.jar",
